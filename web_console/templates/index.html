@@ -61,35 +61,18 @@
       text-transform: uppercase;
       font-weight: 800;
     }
-    .nav-tabs {
-      display: flex;
-      gap: 4px;
-      height: 100%;
-      align-items: center;
-    }
-    .nav-btn {
-      background: transparent;
-      color: #94A3B8;
-      border: none;
-      padding: 8px 16px;
-      font-size: 13px;
+    .workspace-title {
+      font-size: 14px;
       font-weight: 600;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.2s;
+      color: #94A3B8;
     }
-    .nav-btn:hover {
+    .workspace-title strong {
       color: #FFFFFF;
-      background: rgba(255,255,255,0.05);
-    }
-    .nav-btn.active {
-      color: #FFFFFF;
-      background: var(--emerald-dark);
     }
     .user-pill {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       font-size: 13px;
       background: rgba(255,255,255,0.08);
       padding: 6px 14px;
@@ -99,6 +82,25 @@
       color: var(--emerald);
       font-weight: 700;
       font-size: 11px;
+      background: rgba(5, 150, 105, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #E2E8F0;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover {
+      background: rgba(220, 38, 38, 0.2);
+      border-color: var(--danger);
+      color: #FFFFFF;
     }
 
     /* Container */
@@ -106,6 +108,68 @@
       max-width: 1240px;
       margin: 24px auto;
       padding: 0 20px;
+    }
+
+    /* Login Screen Container */
+    .login-container {
+      max-width: 440px;
+      margin: 60px auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      padding: 32px;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .login-header h2 {
+      font-size: 20px;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .login-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .quick-account-chips {
+      margin-top: 24px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .quick-account-chips p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .chip-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .chip-btn {
+      background: #F1F5F9;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .chip-btn:hover {
+      background: #E2E8F0;
+    }
+    .chip-btn strong {
+      display: block;
+      color: var(--navy);
+    }
+    .chip-btn span {
+      color: var(--text-muted);
+      font-size: 10px;
     }
 
     /* Hero / Stat Cards */
@@ -281,7 +345,7 @@
     .alert-info { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
     .alert-warning { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
 
-    /* Modals / Overlays */
+    /* Views */
     .view-section { display: none; }
     .view-section.active { display: block; }
 
@@ -332,25 +396,21 @@
 </head>
 <body>
 
-  <!-- Top Navigation -->
+  <!-- Top Header -->
   <header>
     <div class="brand">
       <span>PRAMAN</span>
       <span class="brand-badge">Evidence Platform</span>
     </div>
 
-    <div class="nav-tabs" id="navTabs">
-      <button class="nav-btn active" onclick="switchTab('transporter')">Transporter</button>
-      <button class="nav-btn" onclick="switchTab('centre')">Collection Centre</button>
-      <button class="nav-btn" onclick="switchTab('retailer')">Retailer</button>
-      <button class="nav-btn" onclick="switchTab('officer')">Evidence Integrity Officer</button>
-      <button class="nav-btn" onclick="switchTab('admin')">Platform Admin</button>
-      <button class="nav-btn" onclick="switchTab('verify')">Customer QR Verification</button>
+    <div class="workspace-title" id="workspaceHeader">
+      Workspace: <strong id="currentWorkspaceName">Sign In Required</strong>
     </div>
 
-    <div class="user-pill">
-      <span id="activeUserName">Kisan Logistics</span>
-      <span class="user-role-tag" id="activeUserRole">[TRANSPORTER]</span>
+    <div class="user-pill" id="userPill" style="display:none;">
+      <span id="activeUserName">Guest</span>
+      <span class="user-role-tag" id="activeUserRole">[ROLE]</span>
+      <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
     </div>
   </header>
 
@@ -358,20 +418,77 @@
     <div id="statusBanner" style="display:none;" class="alert alert-success"></div>
 
     <!-- ============================================================ -->
-    <!-- TRANSPORTER WORKSPACE -->
+    <!-- LOGIN SCREEN (ROLE-BASED AUTHENTICATION GATE) -->
     <!-- ============================================================ -->
-    <div id="view-transporter" class="view-section active">
+    <div id="view-login" class="view-section active">
+      <div class="login-container">
+        <div class="login-header">
+          <h2>Platform Authentication</h2>
+          <p>Sign in to your designated organizational workspace</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" required autofocus>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-control" value="Praman@2026" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">Sign In to Workspace</button>
+        </form>
+
+        <div class="quick-account-chips">
+          <p>Quick Workspace Sign-In:</p>
+          <div class="chip-grid">
+            <button class="chip-btn" onclick="quickFill('transporter1', 'Praman@2026')">
+              <strong>Transporter</strong>
+              <span>Kisan Logistics</span>
+            </button>
+            <button class="chip-btn" onclick="quickFill('centre1', 'Praman@2026')">
+              <strong>Collection Centre</strong>
+              <span>Adilabad Centre</span>
+            </button>
+            <button class="chip-btn" onclick="quickFill('retailer1', 'Praman@2026')">
+              <strong>Retailer</strong>
+              <span>Nature Organics</span>
+            </button>
+            <button class="chip-btn" onclick="quickFill('officer1', 'Praman@2026')">
+              <strong>Integrity Officer</strong>
+              <span>Dr. Rao Bureau</span>
+            </button>
+            <button class="chip-btn" onclick="quickFill('admin1', 'Praman@2026')" style="grid-column: 1 / -1;">
+              <strong>Platform Governance Admin</strong>
+              <span>System Administrator</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+          <a href="javascript:void(0)" onclick="openPublicVerifyDirect()" style="font-size:12px; color:var(--emerald); font-weight:600; text-decoration:none;">
+            Looking for Customer QR Verification? Click here
+          </a>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- TRANSPORTER WORKSPACE (ROLE: TRANSPORTER) -->
+    <!-- ============================================================ -->
+    <div id="view-transporter" class="view-section">
       <div class="grid-stats">
         <div class="stat-card">
           <div class="stat-label">Assigned Shipments</div>
-          <div class="stat-value" id="tStatAssigned">1</div>
+          <div class="stat-value" id="tStatAssigned">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">In Transit</div>
-          <div class="stat-value" id="tStatTransit">1</div>
+          <div class="stat-label">Active In Transit</div>
+          <div class="stat-value" id="tStatTransit">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Delivered</div>
+          <div class="stat-label">Completed Deliveries</div>
           <div class="stat-value" id="tStatDelivered">0</div>
         </div>
         <div class="stat-card">
@@ -425,7 +542,7 @@
       <!-- Shipments Table -->
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">Active Transporter Fleet Shipments</span>
+          <span class="panel-title">Authorized Transporter Fleet Shipments</span>
           <button class="btn btn-secondary" onclick="loadTransporterData()">Refresh Fleet</button>
         </div>
         <div class="panel-body" style="padding:0;">
@@ -449,17 +566,17 @@
 
 
     <!-- ============================================================ -->
-    <!-- COLLECTION CENTRE WORKSPACE -->
+    <!-- COLLECTION CENTRE WORKSPACE (ROLE: COLLECTION_CENTRE) -->
     <!-- ============================================================ -->
     <div id="view-centre" class="view-section">
       <div class="grid-stats">
         <div class="stat-card">
           <div class="stat-label">Inventory at Centre</div>
-          <div class="stat-value" id="cStatAtCentre">1</div>
+          <div class="stat-value" id="cStatAtCentre">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Quality Graded</div>
-          <div class="stat-value" id="cStatGraded">1</div>
+          <div class="stat-value" id="cStatGraded">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Incoming Transit</div>
@@ -467,7 +584,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-label">Total Batches</div>
-          <div class="stat-value" id="cStatTotal">1</div>
+          <div class="stat-value" id="cStatTotal">0</div>
         </div>
       </div>
 
@@ -485,7 +602,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Weighbridge Measurement (kg)</label>
-                <input type="number" step="0.1" id="cMeasuredWeight" class="form-control" value="1200.0" required>
+                <input type="number" step="0.1" id="cMeasuredWeight" class="form-control" value="1195.0" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Quality Grade Assessed</label>
@@ -498,7 +615,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Moisture Reading (%)</label>
-                <input type="number" step="0.1" id="cMoisture" class="form-control" value="8.4">
+                <input type="number" step="0.1" id="cMoisture" class="form-control" value="7.8">
               </div>
               <div class="form-group">
                 <label class="form-label">Acceptance Decision</label>
@@ -517,7 +634,7 @@
       <!-- Action: Batch Splitting -->
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">Batch Splitting &amp; Lineage Reconciliation</span>
+          <span class="panel-title">Batch Splitting &amp; Strict Lineage Reconciliation</span>
         </div>
         <div class="panel-body">
           <form id="centreSplitForm" onsubmit="handleBatchSplit(event)">
@@ -536,7 +653,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Drying / Processing Loss (kg)</label>
-                <input type="number" step="0.1" id="cSplitLoss" class="form-control" value="20.0" required>
+                <input type="number" step="0.1" id="cSplitLoss" class="form-control" value="15.0" required>
               </div>
             </div>
             <button type="submit" class="btn btn-secondary">Split Batch &amp; Record Cryptographic Lineage</button>
@@ -571,13 +688,13 @@
 
 
     <!-- ============================================================ -->
-    <!-- RETAILER WORKSPACE -->
+    <!-- RETAILER WORKSPACE (ROLE: RETAILER) -->
     <!-- ============================================================ -->
     <div id="view-retailer" class="view-section">
       <div class="grid-stats">
         <div class="stat-card">
           <div class="stat-label">Available for Procurement</div>
-          <div class="stat-value" id="rStatAvailable">1</div>
+          <div class="stat-value" id="rStatAvailable">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Purchase Orders</div>
@@ -602,7 +719,7 @@
           <form id="retailerOrderForm" onsubmit="handleRetailerProcure(event)">
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label">Available Batch</label>
+                <label class="form-label">Available Certified Batch</label>
                 <select id="rBatchSelect" class="form-control" required></select>
               </div>
               <div class="form-group">
@@ -611,7 +728,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Agreed Unit Price (INR / kg)</label>
-                <input type="number" step="0.1" id="rUnitPrice" class="form-control" value="72.50" required>
+                <input type="number" step="0.1" id="rUnitPrice" class="form-control" value="85.00" required>
               </div>
             </div>
             <button type="submit" class="btn btn-primary">Place Procurement Order</button>
@@ -645,7 +762,7 @@
 
 
     <!-- ============================================================ -->
-    <!-- EVIDENCE INTEGRITY OFFICER WORKSPACE -->
+    <!-- EVIDENCE INTEGRITY OFFICER WORKSPACE (ROLE: EVIDENCE_INTEGRITY_OFFICER) -->
     <!-- ============================================================ -->
     <div id="view-officer" class="view-section">
       <div class="grid-stats">
@@ -726,24 +843,24 @@
 
 
     <!-- ============================================================ -->
-    <!-- PLATFORM ADMIN WORKSPACE -->
+    <!-- PLATFORM ADMIN WORKSPACE (ROLE: ADMIN) -->
     <!-- ============================================================ -->
     <div id="view-admin" class="view-section">
       <div class="grid-stats">
         <div class="stat-card">
           <div class="stat-label">Active Users</div>
-          <div class="stat-value" id="aStatUsers">5</div>
+          <div class="stat-value" id="aStatUsers">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Organizations</div>
-          <div class="stat-value" id="aStatOrgs">5</div>
+          <div class="stat-value" id="aStatOrgs">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">System Health</div>
           <div class="stat-value" id="aStatHealth" style="color:var(--emerald);">OPTIMAL</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">DB Status</div>
+          <div class="stat-label">Database Status</div>
           <div class="stat-value">CONNECTED</div>
         </div>
       </div>
@@ -813,7 +930,7 @@
 
 
     <!-- ============================================================ -->
-    <!-- CUSTOMER QR VERIFICATION (PUBLIC PROVENANCE VIEW) -->
+    <!-- CUSTOMER QR VERIFICATION (PUBLIC CONSUMER VIEW) -->
     <!-- ============================================================ -->
     <div id="view-verify" class="view-section">
       <div class="verify-box">
@@ -825,18 +942,18 @@
 
         <div style="background:#F1F5F9; border-radius:8px; padding:16px; margin-bottom:20px; text-align:left;">
           <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Opaque Consumer Token</div>
-          <div style="font-family:monospace; font-weight:700; color:var(--navy); word-break:break-all;" id="vTokenText">prm_demo_authentic_token</div>
+          <div style="font-family:monospace; font-weight:700; color:var(--navy); word-break:break-all;" id="vTokenText">prm_synth_organic_cotton_7810ad</div>
         </div>
 
         <div class="timeline">
           <div class="timeline-step">
             <strong style="color:var(--navy);">Farm Harvest &amp; Cultivation Origin</strong>
-            <div style="font-size:12px; color:var(--text-muted);">Adilabad Regional Cluster, Telangana — Certified Desi Organic Cotton</div>
+            <div style="font-size:12px; color:var(--text-muted);" id="vCropDesc">Adilabad Regional Cluster, Telangana — Certified Organic Cotton</div>
             <div style="font-size:11px; color:var(--emerald-dark); font-weight:700; margin-top:2px;">&#10004; Zero Farmer PII &amp; Zero Private GPS Disclosed</div>
           </div>
           <div class="timeline-step">
             <strong style="color:var(--navy);">Collection Centre Grade Inspection</strong>
-            <div style="font-size:12px; color:var(--text-muted);">Weighed &amp; Graded Grade A. Moisture: 8.4% (Pass). Batch sealed.</div>
+            <div style="font-size:12px; color:var(--text-muted);">Weighed &amp; Graded Grade A. Moisture: 7.8% (Pass). Batch sealed.</div>
           </div>
           <div class="timeline-step">
             <strong style="color:var(--navy);">Secure Chain-of-Custody Transit</strong>
@@ -850,6 +967,7 @@
 
         <div style="display:flex; justify-content:center; gap:12px;">
           <button class="btn btn-primary" onclick="verifyOpaqueTokenPrompt()">Verify Another QR Token</button>
+          <button class="btn btn-secondary" onclick="showLoginView()">Back to Platform Sign In</button>
         </div>
       </div>
     </div>
@@ -858,6 +976,7 @@
 
   <script>
     const API_BASE = '/api/v1/platform';
+    let currentUser = null;
 
     function showBanner(msg, type='success') {
       const b = document.getElementById('statusBanner');
@@ -867,25 +986,111 @@
       setTimeout(() => { b.style.display = 'none'; }, 5000);
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-
-      const target = document.getElementById('view-' + tab);
-      if (target) target.classList.add('active');
-
-      const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.textContent.toLowerCase().includes(tab.replace('centre','collection')));
-      if (btn) btn.classList.add('active');
-
-      if (tab === 'transporter') loadTransporterData();
-      if (tab === 'centre') loadCentreData();
-      if (tab === 'retailer') loadRetailerData();
-      if (tab === 'officer') loadOfficerData();
-      if (tab === 'admin') loadAdminData();
+    function quickFill(u, p) {
+      document.getElementById('loginUsername').value = u;
+      document.getElementById('loginPassword').value = p;
     }
 
     // -----------------------------------------------------------------
-    // TRANSPORTER LOGIC
+    // REAL LOGIN & AUTHENTICATION HANDLERS
+    // -----------------------------------------------------------------
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value;
+      const p = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ username: u, password: p })
+        });
+
+        if (!res.ok) {
+          alert('Authentication failed: Invalid username or password');
+          return;
+        }
+
+        const data = await res.json();
+        currentUser = data.user;
+        localStorage.setItem('praman_user', JSON.stringify(currentUser));
+        localStorage.setItem('praman_token', data.access_token);
+
+        routeUserToWorkspace(currentUser);
+      } catch (err) {
+        alert('Server connection error during login');
+      }
+    }
+
+    function routeUserToWorkspace(user) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+
+      // Update header pill
+      document.getElementById('userPill').style.display = 'flex';
+      document.getElementById('activeUserName').textContent = user.full_name;
+      document.getElementById('activeUserRole').textContent = `[${user.role}]`;
+      document.getElementById('currentWorkspaceName').textContent = `${user.organization_name || user.role} Workspace`;
+
+      if (user.role === 'TRANSPORTER') {
+        document.getElementById('view-transporter').classList.add('active');
+        loadTransporterData();
+      } else if (user.role === 'COLLECTION_CENTRE') {
+        document.getElementById('view-centre').classList.add('active');
+        loadCentreData();
+      } else if (user.role === 'RETAILER') {
+        document.getElementById('view-retailer').classList.add('active');
+        loadRetailerData();
+      } else if (user.role === 'EVIDENCE_INTEGRITY_OFFICER') {
+        document.getElementById('view-officer').classList.add('active');
+        loadOfficerData();
+      } else if (user.role === 'ADMIN') {
+        document.getElementById('view-admin').classList.add('active');
+        loadAdminData();
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('praman_user');
+      localStorage.removeItem('praman_token');
+      document.getElementById('userPill').style.display = 'none';
+      document.getElementById('currentWorkspaceName').textContent = 'Sign In Required';
+      showLoginView();
+    }
+
+    function showLoginView() {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-login').classList.add('active');
+    }
+
+    function openPublicVerifyDirect() {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-verify').classList.add('active');
+      document.getElementById('workspaceHeader').innerHTML = 'Public Consumer Verification';
+    }
+
+    function openCustomerVerify(token) {
+      openPublicVerifyDirect();
+      document.getElementById('vTokenText').textContent = token;
+      fetch(`${API_BASE}/verify/${token}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.crop_type) {
+            document.getElementById('vCropDesc').textContent = `${data.coarse_region} — Certified ${data.crop_type}`;
+          }
+        })
+        .catch(console.error);
+    }
+
+    function verifyOpaqueTokenPrompt() {
+      const token = prompt('Enter customer opaque verification token:');
+      if (token) {
+        openCustomerVerify(token);
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // REAL BACKEND TRANSPORTER LOGIC
     // -----------------------------------------------------------------
     async function loadTransporterData() {
       try {
@@ -966,7 +1171,7 @@
     }
 
     // -----------------------------------------------------------------
-    // COLLECTION CENTRE LOGIC
+    // REAL BACKEND COLLECTION CENTRE LOGIC
     // -----------------------------------------------------------------
     async function loadCentreData() {
       try {
@@ -1070,7 +1275,7 @@
     }
 
     // -----------------------------------------------------------------
-    // RETAILER LOGIC
+    // REAL BACKEND RETAILER LOGIC
     // -----------------------------------------------------------------
     async function loadRetailerData() {
       try {
@@ -1136,13 +1341,8 @@
       loadRetailerData();
     }
 
-    function openCustomerVerify(token) {
-      switchTab('verify');
-      document.getElementById('vTokenText').textContent = token;
-    }
-
     // -----------------------------------------------------------------
-    // EVIDENCE INTEGRITY OFFICER LOGIC
+    // REAL BACKEND EVIDENCE INTEGRITY OFFICER LOGIC
     // -----------------------------------------------------------------
     async function loadOfficerData() {
       try {
@@ -1201,7 +1401,7 @@
     }
 
     // -----------------------------------------------------------------
-    // ADMIN LOGIC
+    // REAL BACKEND PLATFORM ADMIN LOGIC
     // -----------------------------------------------------------------
     async function loadAdminData() {
       try {
@@ -1251,16 +1451,20 @@
       }
     }
 
-    function verifyOpaqueTokenPrompt() {
-      const token = prompt('Enter customer opaque verification token:');
-      if (token) {
-        openCustomerVerify(token);
+    // Check if user is already logged in from previous session
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('praman_user');
+      if (saved) {
+        try {
+          currentUser = JSON.parse(saved);
+          routeUserToWorkspace(currentUser);
+        } catch (e) {
+          showLoginView();
+        }
+      } else {
+        showLoginView();
       }
-    }
-
-    // Initialize default view
-    loadTransporterData();
+    });
   </script>
 </body>
 </html>
-
