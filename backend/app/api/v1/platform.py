@@ -813,17 +813,17 @@ def create_user(req: UserCreateRequest, db: Session = Depends(get_db)):
 @router.get("/verify/{opaque_token}")
 def get_public_verification(opaque_token: str, db: Session = Depends(get_db)):
     """Zero-PII, zero-GPS consumer provenance verification endpoint."""
-    token_entry = db.query(PublicToken).filter(PublicToken.token == opaque_token).first()
-    if not token_entry:
-        # Check if it matches an inventory token
-        inv = db.query(RetailerInventory).filter(RetailerInventory.opaque_qr_token == opaque_token).first()
-        if not inv:
-            raise HTTPException(status_code=404, detail="Verification token not found or expired")
+    # Priority 1: Check if token is associated with retail inventory (which has the exact batch & crop)
+    inv = db.query(RetailerInventory).filter(RetailerInventory.opaque_qr_token == opaque_token).first()
+    if inv:
         crop = inv.crop_type
         batch_code = inv.batch.batch_code if inv.batch else "BATCH-PRM-001"
     else:
+        token_entry = db.query(PublicToken).filter(PublicToken.token == opaque_token).first()
+        if not token_entry:
+            raise HTTPException(status_code=404, detail="Verification token not found or expired")
         ev = db.query(Evidence).filter(Evidence.id == token_entry.evidence_id).first()
-        crop = ev.farm.crop_type if (ev and ev.farm) else "Cotton"
+        crop = ev.farm.crop_type if (ev and ev.farm and ev.farm.crop_type) else "Cotton"
         batch_code = f"BATCH-VERIFIED-{token_entry.token[:8]}"
 
     return {
