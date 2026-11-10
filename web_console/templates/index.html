@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRAMAN — Evidence Intelligence &amp; Trusted Provenance Platform</title>
+  <style>
+    :root {
+      --bg: #F8F9FA;
+      --surface: #FFFFFF;
+      --navy: #0A192F;
+      --navy-light: #1E293B;
+      --emerald: #059669;
+      --emerald-dark: #047857;
+      --emerald-light: #ECFDF5;
+      --border: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --danger: #DC2626;
+      --warning: #D97706;
+      --radius: 8px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header & Navigation */
+    header {
+      background-color: var(--navy);
+      color: #FFFFFF;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--emerald);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+    .brand-badge {
+      background: var(--emerald);
+      color: #FFFFFF;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      height: 100%;
+      align-items: center;
+    }
+    .nav-btn {
+      background: transparent;
+      color: #94A3B8;
+      border: none;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      color: #FFFFFF;
+      background: rgba(255,255,255,0.05);
+    }
+    .nav-btn.active {
+      color: #FFFFFF;
+      background: var(--emerald-dark);
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      background: rgba(255,255,255,0.08);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .user-role-tag {
+      color: var(--emerald);
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+
+    /* Hero / Stat Cards */
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    /* Panels & Tables */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FAFAFA;
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .panel-body {
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    tr:hover td {
+      background: #F8FAFC;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-success { background: var(--emerald-light); color: var(--emerald-dark); }
+    .badge-warning { background: #FEF3C7; color: var(--warning); }
+    .badge-danger { background: #FEE2E2; color: var(--danger); }
+    .badge-info { background: #E0F2FE; color: #0284C7; }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--navy-light);
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #FFFFFF;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+    textarea.form-control {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: var(--emerald);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: var(--emerald-dark);
+    }
+    .btn-secondary {
+      background: #E2E8F0;
+      color: var(--navy);
+    }
+    .btn-secondary:hover {
+      background: #CBD5E1;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: #FFFFFF;
+    }
+
+    /* Alert / Banner */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-success { background: var(--emerald-light); color: var(--emerald-dark); border: 1px solid #A7F3D0; }
+    .alert-info { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+    .alert-warning { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+
+    /* Modals / Overlays */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* Public QR Verification Card */
+    .verify-box {
+      max-width: 680px;
+      margin: 40px auto;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      padding: 32px;
+      text-align: center;
+    }
+    .verify-stamp {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--emerald-light);
+      color: var(--emerald);
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .timeline {
+      text-align: left;
+      margin: 24px 0;
+      padding-left: 20px;
+      border-left: 2px solid var(--emerald);
+    }
+    .timeline-step {
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .timeline-step::before {
+      content: "";
+      position: absolute;
+      left: -27px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--emerald);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="brand">
+      <span>PRAMAN</span>
+      <span class="brand-badge">Evidence Platform</span>
+    </div>
+
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-btn active" onclick="switchTab('transporter')">Transporter</button>
+      <button class="nav-btn" onclick="switchTab('centre')">Collection Centre</button>
+      <button class="nav-btn" onclick="switchTab('retailer')">Retailer</button>
+      <button class="nav-btn" onclick="switchTab('officer')">Evidence Integrity Officer</button>
+      <button class="nav-btn" onclick="switchTab('admin')">Platform Admin</button>
+      <button class="nav-btn" onclick="switchTab('verify')">Customer QR Verification</button>
+    </div>
+
+    <div class="user-pill">
+      <span id="activeUserName">Kisan Logistics</span>
+      <span class="user-role-tag" id="activeUserRole">[TRANSPORTER]</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="statusBanner" style="display:none;" class="alert alert-success"></div>
+
+    <!-- ============================================================ -->
+    <!-- TRANSPORTER WORKSPACE -->
+    <!-- ============================================================ -->
+    <div id="view-transporter" class="view-section active">
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">Assigned Shipments</div>
+          <div class="stat-value" id="tStatAssigned">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">In Transit</div>
+          <div class="stat-value" id="tStatTransit">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Delivered</div>
+          <div class="stat-value" id="tStatDelivered">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Open Incidents</div>
+          <div class="stat-value" id="tStatIncidents">0</div>
+        </div>
+      </div>
+
+      <!-- Action: Pickup Confirmation Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">1. Logistics Action — Pickup &amp; Dispatch Confirmation</span>
+        </div>
+        <div class="panel-body">
+          <form id="transporterPickupForm" onsubmit="handleTransporterPickup(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Active Shipment ID / Code</label>
+                <select id="tPickupShipmentSelect" class="form-control" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Driver Full Name</label>
+                <input type="text" id="tDriverName" class="form-control" value="K. Mallesh" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Vehicle Registration Number</label>
+                <input type="text" id="tVehicleReg" class="form-control" value="TS 01 AB 4021" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Loaded Quantity (kg)</label>
+                <input type="number" step="0.1" id="tPickupQty" class="form-control" value="1200.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Produce Physical Condition</label>
+                <select id="tCondition" class="form-control">
+                  <option value="EXCELLENT">Excellent (Moisture-controlled)</option>
+                  <option value="GOOD" selected>Good / Intact Tarpaulin</option>
+                  <option value="WEATHER_EXPOSED">Weather Exposed / Caution</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Dispatch Notes &amp; Route</label>
+                <input type="text" id="tNotes" class="form-control" value="Picked up at farm gate. Heading towards Adilabad centre via NH 44.">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Confirm Pickup &amp; Seal Shipment</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Shipments Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Active Transporter Fleet Shipments</span>
+          <button class="btn btn-secondary" onclick="loadTransporterData()">Refresh Fleet</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Shipment Code</th>
+                <th>Driver</th>
+                <th>Vehicle</th>
+                <th>Route</th>
+                <th>Status</th>
+                <th>Items (Batch)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transporterTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- COLLECTION CENTRE WORKSPACE -->
+    <!-- ============================================================ -->
+    <div id="view-centre" class="view-section">
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">Inventory at Centre</div>
+          <div class="stat-value" id="cStatAtCentre">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Quality Graded</div>
+          <div class="stat-value" id="cStatGraded">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Incoming Transit</div>
+          <div class="stat-value" id="cStatIncoming">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Batches</div>
+          <div class="stat-value" id="cStatTotal">1</div>
+        </div>
+      </div>
+
+      <!-- Action: Weighing & Grading -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Collection Centre Weighbridge &amp; Quality Inspection</span>
+        </div>
+        <div class="panel-body">
+          <form id="centreInspectForm" onsubmit="handleCentreInspect(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Target Batch Code</label>
+                <select id="cBatchSelect" class="form-control" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Weighbridge Measurement (kg)</label>
+                <input type="number" step="0.1" id="cMeasuredWeight" class="form-control" value="1200.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quality Grade Assessed</label>
+                <select id="cQualityGrade" class="form-control">
+                  <option value="GRADE_A" selected>Grade A (Premium Organic)</option>
+                  <option value="GRADE_B">Grade B (Standard Market)</option>
+                  <option value="GRADE_C">Grade C (Industrial/By-product)</option>
+                  <option value="REJECTED">Rejected (Severe Damage)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Moisture Reading (%)</label>
+                <input type="number" step="0.1" id="cMoisture" class="form-control" value="8.4">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Acceptance Decision</label>
+                <select id="cDecision" class="form-control">
+                  <option value="ACCEPTED" selected>Accept into Centre Inventory</option>
+                  <option value="HOLD">Hold for Officer Review</option>
+                  <option value="REJECTED">Reject Consignment</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Weighing &amp; Grading Record</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Action: Batch Splitting -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Batch Splitting &amp; Lineage Reconciliation</span>
+        </div>
+        <div class="panel-body">
+          <form id="centreSplitForm" onsubmit="handleBatchSplit(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Parent Batch to Split</label>
+                <select id="cSplitParentSelect" class="form-control" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Child Batch A Qty (kg)</label>
+                <input type="number" step="0.1" id="cSplitA" class="form-control" value="700.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Child Batch B Qty (kg)</label>
+                <input type="number" step="0.1" id="cSplitB" class="form-control" value="480.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Drying / Processing Loss (kg)</label>
+                <input type="number" step="0.1" id="cSplitLoss" class="form-control" value="20.0" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-secondary">Split Batch &amp; Record Cryptographic Lineage</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Batches Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Collection Centre Inventory Batches</span>
+          <button class="btn btn-secondary" onclick="loadCentreData()">Refresh Batches</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Batch Code</th>
+                <th>Crop</th>
+                <th>Quantity</th>
+                <th>Stage</th>
+                <th>Grade</th>
+                <th>Lineage</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="centreTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- RETAILER WORKSPACE -->
+    <!-- ============================================================ -->
+    <div id="view-retailer" class="view-section">
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">Available for Procurement</div>
+          <div class="stat-value" id="rStatAvailable">1</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Purchase Orders</div>
+          <div class="stat-value" id="rStatOrders">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Stock Items</div>
+          <div class="stat-value" id="rStatStock">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Stock On Shelf (kg)</div>
+          <div class="stat-value" id="rStatStockKg">0.0</div>
+        </div>
+      </div>
+
+      <!-- Procurement Order Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Purchase Order &amp; Procurement Submission</span>
+        </div>
+        <div class="panel-body">
+          <form id="retailerOrderForm" onsubmit="handleRetailerProcure(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Available Batch</label>
+                <select id="rBatchSelect" class="form-control" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Order Quantity (kg)</label>
+                <input type="number" step="0.1" id="rOrderQty" class="form-control" value="500.0" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Agreed Unit Price (INR / kg)</label>
+                <input type="number" step="0.1" id="rUnitPrice" class="form-control" value="72.50" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Place Procurement Order</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Retail Stock & Customer QR Codes -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Retail Inventory &amp; Consumer QR Token Verification Links</span>
+          <button class="btn btn-secondary" onclick="loadRetailerData()">Refresh Retail Stock</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Batch Code</th>
+                <th>Crop</th>
+                <th>Stock Quantity</th>
+                <th>Location</th>
+                <th>Customer Opaque QR Token</th>
+                <th>Consumer Link</th>
+              </tr>
+            </thead>
+            <tbody id="retailerInventoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- EVIDENCE INTEGRITY OFFICER WORKSPACE -->
+    <!-- ============================================================ -->
+    <div id="view-officer" class="view-section">
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">Pending Officer Review</div>
+          <div class="stat-value" id="oStatPending" style="color:var(--warning);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Substantiated Approved</div>
+          <div class="stat-value" id="oStatApproved">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Policy Violations</div>
+          <div class="stat-value" id="oStatRejected" style="color:var(--danger);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Evidence Ingested</div>
+          <div class="stat-value" id="oStatTotal">0</div>
+        </div>
+      </div>
+
+      <!-- Investigation Action Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Evidence Integrity Officer Case Adjudication</span>
+        </div>
+        <div class="panel-body">
+          <form id="officerDecisionForm" onsubmit="handleOfficerDecision(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Target Evidence Case ID</label>
+                <select id="oEvidenceSelect" class="form-control" required></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Investigation Finding / Decision</label>
+                <select id="oDecision" class="form-control">
+                  <option value="CONFIRM_VALID">Confirm Valid (Cryptographic &amp; AI Passed)</option>
+                  <option value="REQUEST_FRESH_EVIDENCE">Request Fresh Evidence (Active Challenge)</option>
+                  <option value="MARK_INCONCLUSIVE">Mark Inconclusive (Insufficient Resolution)</option>
+                  <option value="SUBSTANTIATED_VIOLATION">Substantiated Policy Violation (Tamper/Fraud)</option>
+                  <option value="ESCALATE_SECOND_APPROVAL">Escalate for Second Approval Safeguard</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Case Investigation Findings &amp; Policy Rationale</label>
+                <textarea id="oExplanation" class="form-control" placeholder="Detail image forensic assessment, ELA variance, GPS spatial bounds check, and RFC 8785 signature verification..." required>Forensic noise variance within legitimate camera sensor distribution. Farm boundary intersection verified.</textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Record Official Investigation Finding</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Officer Cases Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Human Review Queue &amp; AI Assessment Invariant Signals</span>
+          <button class="btn btn-secondary" onclick="loadOfficerData()">Refresh Cases</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Evidence ID</th>
+                <th>Farm / Origin</th>
+                <th>Crop &amp; Stage</th>
+                <th>Status</th>
+                <th>AI Tamper Flag</th>
+                <th>Blur / Quality</th>
+                <th>SHA-256 Digest</th>
+              </tr>
+            </thead>
+            <tbody id="officerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- PLATFORM ADMIN WORKSPACE -->
+    <!-- ============================================================ -->
+    <div id="view-admin" class="view-section">
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">Active Users</div>
+          <div class="stat-value" id="aStatUsers">5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Organizations</div>
+          <div class="stat-value" id="aStatOrgs">5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">System Health</div>
+          <div class="stat-value" id="aStatHealth" style="color:var(--emerald);">OPTIMAL</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">DB Status</div>
+          <div class="stat-value">CONNECTED</div>
+        </div>
+      </div>
+
+      <!-- User Creation Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Platform Governance — Register New User / Officer Account</span>
+        </div>
+        <div class="panel-body">
+          <form id="adminUserForm" onsubmit="handleAdminCreateUser(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="aUsername" class="form-control" placeholder="e.g. officer_sub2" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="aEmail" class="form-control" placeholder="user@praman.org" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="aFullName" class="form-control" placeholder="Officer Name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Authorized Role</label>
+                <select id="aRole" class="form-control">
+                  <option value="TRANSPORTER">Transporter</option>
+                  <option value="COLLECTION_CENTRE">Collection Centre Manager</option>
+                  <option value="RETAILER">Retailer</option>
+                  <option value="EVIDENCE_INTEGRITY_OFFICER" selected>Evidence Integrity Officer</option>
+                  <option value="ADMIN">Platform Administrator</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Initial Password</label>
+                <input type="password" id="aPassword" class="form-control" value="Praman@2026" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Authorized Account</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Users & Organizations Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">System Role Permissions &amp; Memberships</span>
+          <button class="btn btn-secondary" onclick="loadAdminData()">Refresh Users</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Organization</th>
+                <th>Account Status</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- CUSTOMER QR VERIFICATION (PUBLIC PROVENANCE VIEW) -->
+    <!-- ============================================================ -->
+    <div id="view-verify" class="view-section">
+      <div class="verify-box">
+        <div class="verify-stamp">&#10003;</div>
+        <h2 style="color:var(--navy); font-size:22px; margin-bottom:6px;">PRAMAN Verified Provenance Certificate</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">
+          Cryptographic NIST P-256 Authority Signature &amp; Merkle Root Commitment Verified
+        </p>
+
+        <div style="background:#F1F5F9; border-radius:8px; padding:16px; margin-bottom:20px; text-align:left;">
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Opaque Consumer Token</div>
+          <div style="font-family:monospace; font-weight:700; color:var(--navy); word-break:break-all;" id="vTokenText">prm_demo_authentic_token</div>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-step">
+            <strong style="color:var(--navy);">Farm Harvest &amp; Cultivation Origin</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Adilabad Regional Cluster, Telangana — Certified Desi Organic Cotton</div>
+            <div style="font-size:11px; color:var(--emerald-dark); font-weight:700; margin-top:2px;">&#10004; Zero Farmer PII &amp; Zero Private GPS Disclosed</div>
+          </div>
+          <div class="timeline-step">
+            <strong style="color:var(--navy);">Collection Centre Grade Inspection</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Weighed &amp; Graded Grade A. Moisture: 8.4% (Pass). Batch sealed.</div>
+          </div>
+          <div class="timeline-step">
+            <strong style="color:var(--navy);">Secure Chain-of-Custody Transit</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Logged via Verified Vehicle TS 01 AB 4021. Tamper seal intact.</div>
+          </div>
+          <div class="timeline-step">
+            <strong style="color:var(--navy);">Retail Stock &amp; Ledger Commitment</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Shelved at Nature Organics Retail Depot. Committed to Merkle Root.</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:12px;">
+          <button class="btn btn-primary" onclick="verifyOpaqueTokenPrompt()">Verify Another QR Token</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const API_BASE = '/api/v1/platform';
+
+    function showBanner(msg, type='success') {
+      const b = document.getElementById('statusBanner');
+      b.className = 'alert alert-' + type;
+      b.textContent = msg;
+      b.style.display = 'block';
+      setTimeout(() => { b.style.display = 'none'; }, 5000);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      const target = document.getElementById('view-' + tab);
+      if (target) target.classList.add('active');
+
+      const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.textContent.toLowerCase().includes(tab.replace('centre','collection')));
+      if (btn) btn.classList.add('active');
+
+      if (tab === 'transporter') loadTransporterData();
+      if (tab === 'centre') loadCentreData();
+      if (tab === 'retailer') loadRetailerData();
+      if (tab === 'officer') loadOfficerData();
+      if (tab === 'admin') loadAdminData();
+    }
+
+    // -----------------------------------------------------------------
+    // TRANSPORTER LOGIC
+    // -----------------------------------------------------------------
+    async function loadTransporterData() {
+      try {
+        const res = await fetch(`${API_BASE}/transporter/dashboard`);
+        const data = await res.json();
+        
+        document.getElementById('tStatAssigned').textContent = data.metrics.assigned_shipments;
+        document.getElementById('tStatTransit').textContent = data.metrics.active_in_transit;
+        document.getElementById('tStatDelivered').textContent = data.metrics.completed_deliveries;
+        document.getElementById('tStatIncidents').textContent = data.metrics.open_incidents;
+
+        const tbody = document.getElementById('transporterTableBody');
+        const select = document.getElementById('tPickupShipmentSelect');
+        tbody.innerHTML = '';
+        select.innerHTML = '';
+
+        data.shipments.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.shipment_code} (${s.origin} -> ${s.destination}) [${s.stage}]`;
+          select.appendChild(opt);
+
+          const tr = document.createElement('tr');
+          const batchInfo = s.items.map(it => `${it.batch_code} (${it.declared_quantity} ${it.unit})`).join(', ') || 'No batches';
+          tr.innerHTML = `
+            <td><strong>${s.shipment_code}</strong></td>
+            <td>${s.driver_name}</td>
+            <td><code>${s.vehicle_reg}</code></td>
+            <td>${s.origin} &rarr; ${s.destination}</td>
+            <td><span class="badge ${s.stage === 'DELIVERED' ? 'badge-success' : 'badge-warning'}">${s.stage}</span></td>
+            <td>${batchInfo}</td>
+            <td>
+              ${s.stage !== 'DELIVERED' ? `<button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="quickDeliverShipment('${s.id}')">Deliver</button>` : '<span style="color:var(--emerald); font-weight:700;">Delivered &#10004;</span>'}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleTransporterPickup(e) {
+      e.preventDefault();
+      const payload = {
+        shipment_id: document.getElementById('tPickupShipmentSelect').value,
+        driver_name: document.getElementById('tDriverName').value,
+        vehicle_reg: document.getElementById('tVehicleReg').value,
+        pickup_quantity: parseFloat(document.getElementById('tPickupQty').value),
+        condition: document.getElementById('tCondition').value,
+        notes: document.getElementById('tNotes').value
+      };
+      const res = await fetch(`${API_BASE}/transporter/pickup`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showBanner(`Pickup recorded for shipment! State: ${data.stage}`);
+      loadTransporterData();
+    }
+
+    async function quickDeliverShipment(shipmentId) {
+      const res = await fetch(`${API_BASE}/transporter/delivery`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          shipment_id: shipmentId,
+          destination_name: 'Adilabad Cotton Collection Centre',
+          delivered_quantity: 1200.0,
+          condition: 'GOOD',
+          receiver_notes: 'Delivered intact without delay'
+        })
+      });
+      const data = await res.json();
+      showBanner(`Shipment marked DELIVERED successfully!`);
+      loadTransporterData();
+    }
+
+    // -----------------------------------------------------------------
+    // COLLECTION CENTRE LOGIC
+    // -----------------------------------------------------------------
+    async function loadCentreData() {
+      try {
+        const res = await fetch(`${API_BASE}/centre/dashboard`);
+        const data = await res.json();
+
+        document.getElementById('cStatAtCentre').textContent = data.metrics.inventory_at_centre;
+        document.getElementById('cStatGraded').textContent = data.metrics.graded_batches;
+        document.getElementById('cStatIncoming').textContent = data.metrics.incoming_batches;
+        document.getElementById('cStatTotal').textContent = data.metrics.total_batches;
+
+        const tbody = document.getElementById('centreTableBody');
+        const bSelect = document.getElementById('cBatchSelect');
+        const splitSelect = document.getElementById('cSplitParentSelect');
+        tbody.innerHTML = '';
+        bSelect.innerHTML = '';
+        splitSelect.innerHTML = '';
+
+        data.batches.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = `${b.batch_code} (${b.crop_type} - ${b.quantity} ${b.unit})`;
+          bSelect.appendChild(opt);
+
+          const opt2 = opt.cloneNode(true);
+          splitSelect.appendChild(opt2);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${b.batch_code}</strong></td>
+            <td>${b.crop_type} (${b.variety})</td>
+            <td>${b.quantity} ${b.unit}</td>
+            <td><span class="badge badge-info">${b.stage}</span></td>
+            <td><span class="badge ${b.quality_grade === 'GRADE_A' ? 'badge-success' : 'badge-warning'}">${b.quality_grade}</span></td>
+            <td><code>${b.lineage_type}</code></td>
+            <td>${(b.created_at || '').substring(0, 10)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleCentreInspect(e) {
+      e.preventDefault();
+      const batchId = document.getElementById('cBatchSelect').value;
+      const weight = parseFloat(document.getElementById('cMeasuredWeight').value);
+      const grade = document.getElementById('cQualityGrade').value;
+      const decision = document.getElementById('cDecision').value;
+      const moisture = parseFloat(document.getElementById('cMoisture').value);
+
+      await fetch(`${API_BASE}/centre/weighing`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ batch_id: batchId, measured_weight: weight })
+      });
+
+      const res = await fetch(`${API_BASE}/centre/inspection`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          batch_id: batchId,
+          crop_category: 'Cotton',
+          grade: grade,
+          physical_condition: 'EXCELLENT',
+          moisture_pct: moisture,
+          decision: decision
+        })
+      });
+      const data = await res.json();
+      showBanner(`Quality Inspection saved! Batch: ${data.batch_code}, Grade: ${data.grade}`);
+      loadCentreData();
+    }
+
+    async function handleBatchSplit(e) {
+      e.preventDefault();
+      const parentId = document.getElementById('cSplitParentSelect').value;
+      const a = parseFloat(document.getElementById('cSplitA').value);
+      const b = parseFloat(document.getElementById('cSplitB').value);
+      const loss = parseFloat(document.getElementById('cSplitLoss').value);
+
+      const res = await fetch(`${API_BASE}/centre/split-batch`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          parent_batch_id: parentId,
+          splits: [{ quantity: a, grade: 'GRADE_A' }, { quantity: b, grade: 'GRADE_B' }],
+          loss_waste_quantity: loss,
+          reason_notes: 'Drying and ginning processing split'
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        showBanner(`Batch split into child batches: ${data.children.join(', ')}`);
+        loadCentreData();
+      } else {
+        const err = await res.json();
+        alert('Error: ' + err.detail);
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // RETAILER LOGIC
+    // -----------------------------------------------------------------
+    async function loadRetailerData() {
+      try {
+        const res = await fetch(`${API_BASE}/retailer/dashboard`);
+        const data = await res.json();
+
+        document.getElementById('rStatAvailable').textContent = data.metrics.available_for_procurement;
+        document.getElementById('rStatOrders').textContent = data.metrics.procurement_orders;
+        document.getElementById('rStatStock').textContent = data.metrics.active_retail_stock_items;
+        document.getElementById('rStatStockKg').textContent = data.metrics.total_stock_kg.toFixed(1);
+
+        const select = document.getElementById('rBatchSelect');
+        select.innerHTML = '';
+        data.available_batches.forEach(b => {
+          const opt = document.createElement('option');
+          opt.value = b.id;
+          opt.textContent = `${b.batch_code} (${b.crop_type} - ${b.quantity} ${b.unit}) [${b.grade}]`;
+          select.appendChild(opt);
+        });
+
+        const tbody = document.getElementById('retailerInventoryTableBody');
+        tbody.innerHTML = '';
+        data.inventory.forEach(inv => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${inv.batch_code}</strong></td>
+            <td>${inv.crop_type}</td>
+            <td>${inv.available_quantity} ${inv.unit}</td>
+            <td>${inv.storage_location}</td>
+            <td><code style="background:#F1F5F9; padding:2px 6px; border-radius:4px;">${inv.opaque_qr_token || 'N/A'}</code></td>
+            <td>
+              <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="openCustomerVerify('${inv.opaque_qr_token}')">Open Customer QR</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleRetailerProcure(e) {
+      e.preventDefault();
+      const batchId = document.getElementById('rBatchSelect').value;
+      const qty = parseFloat(document.getElementById('rOrderQty').value);
+      const price = parseFloat(document.getElementById('rUnitPrice').value);
+
+      const res = await fetch(`${API_BASE}/retailer/procure`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ batch_id: batchId, ordered_quantity: qty, unit_price: price })
+      });
+      const order = await res.json();
+
+      // Automatically simulate delivery receiving to stock and generate QR
+      const recRes = await fetch(`${API_BASE}/retailer/receive`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ order_id: order.order_code, received_quantity: qty, actual_condition: 'GOOD' })
+      });
+      const recData = await recRes.json();
+      showBanner(`Procurement order confirmed & stocked! Customer QR Token: ${recData.opaque_qr_token}`);
+      loadRetailerData();
+    }
+
+    function openCustomerVerify(token) {
+      switchTab('verify');
+      document.getElementById('vTokenText').textContent = token;
+    }
+
+    // -----------------------------------------------------------------
+    // EVIDENCE INTEGRITY OFFICER LOGIC
+    // -----------------------------------------------------------------
+    async function loadOfficerData() {
+      try {
+        const res = await fetch(`${API_BASE}/intelligence/overview`);
+        const data = await res.json();
+
+        document.getElementById('oStatPending').textContent = data.metrics.pending_officer_review;
+        document.getElementById('oStatApproved').textContent = data.metrics.substantiated_approved;
+        document.getElementById('oStatRejected').textContent = data.metrics.policy_rejected;
+        document.getElementById('oStatTotal').textContent = data.metrics.total_evidence_ingested;
+
+        const select = document.getElementById('oEvidenceSelect');
+        select.innerHTML = '';
+        const tbody = document.getElementById('officerTableBody');
+        tbody.innerHTML = '';
+
+        data.cases.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `${c.id.substring(0,8)}... (${c.crop} - ${c.lifecycle_stage}) [${c.status}]`;
+          select.appendChild(opt);
+
+          const tr = document.createElement('tr');
+          const isTamper = c.ai_assessment && c.ai_assessment.is_tamper_suspected;
+          const isBlur = c.ai_assessment && c.ai_assessment.is_blurry;
+          tr.innerHTML = `
+            <td><code>${c.id.substring(0,8)}...</code></td>
+            <td>${c.farm_name}</td>
+            <td>${c.crop} (${c.lifecycle_stage})</td>
+            <td><span class="badge ${c.status === 'APPROVED' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+            <td><span class="badge ${isTamper ? 'badge-danger' : 'badge-success'}">${isTamper ? 'SUSPECTED' : 'CLEAR'}</span></td>
+            <td><span class="badge ${isBlur ? 'badge-warning' : 'badge-success'}">${isBlur ? 'BLURRY (FLAGGED)' : 'SHARP'}</span></td>
+            <td><code style="font-size:11px;">${(c.sha256 || '').substring(0,16)}...</code></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleOfficerDecision(e) {
+      e.preventDefault();
+      const evId = document.getElementById('oEvidenceSelect').value;
+      const decision = document.getElementById('oDecision').value;
+      const explanation = document.getElementById('oExplanation').value;
+
+      const res = await fetch(`${API_BASE}/intelligence/decide`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ evidence_id: evId, decision: decision, explanation: explanation })
+      });
+      const data = await res.json();
+      showBanner(`Investigation adjudication recorded! New State: ${data.new_state}`);
+      loadOfficerData();
+    }
+
+    // -----------------------------------------------------------------
+    // ADMIN LOGIC
+    // -----------------------------------------------------------------
+    async function loadAdminData() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/dashboard`);
+        const data = await res.json();
+
+        document.getElementById('aStatUsers').textContent = data.metrics.total_users;
+        document.getElementById('aStatOrgs').textContent = data.metrics.total_organizations;
+
+        const tbody = document.getElementById('adminUsersTableBody');
+        tbody.innerHTML = '';
+        data.users.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${u.username}</strong></td>
+            <td>${u.full_name}</td>
+            <td><span class="badge badge-info">${u.role}</span></td>
+            <td>${u.organization}</td>
+            <td><span class="badge badge-success">${u.is_active ? 'ACTIVE' : 'SUSPENDED'}</span></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleAdminCreateUser(e) {
+      e.preventDefault();
+      const payload = {
+        username: document.getElementById('aUsername').value,
+        email: document.getElementById('aEmail').value,
+        full_name: document.getElementById('aFullName').value,
+        role: document.getElementById('aRole').value,
+        password: document.getElementById('aPassword').value
+      };
+      const res = await fetch(`${API_BASE}/admin/users`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        showBanner(`User ${payload.username} registered with role ${payload.role}!`);
+        loadAdminData();
+      } else {
+        alert('Could not register user');
+      }
+    }
+
+    function verifyOpaqueTokenPrompt() {
+      const token = prompt('Enter customer opaque verification token:');
+      if (token) {
+        openCustomerVerify(token);
+      }
+    }
+
+    // Initialize default view
+    loadTransporterData();
+  </script>
+</body>
+</html>
+

@@ -8,6 +8,7 @@ from backend.app.api.v1.audit import router as audit_router
 from backend.app.api.v1.reviewer import router as reviewer_router
 from backend.app.api.v1.verify import router as verify_router
 from backend.app.api.v1.merkle import router as merkle_router
+from backend.app.api.v1.platform import router as platform_router
 
 api_router = APIRouter()
 api_router.include_router(health_router)
@@ -19,3 +20,4 @@ api_router.include_router(audit_router)
 api_router.include_router(reviewer_router)
 api_router.include_router(verify_router)
 api_router.include_router(merkle_router)
+api_router.include_router(platform_router)

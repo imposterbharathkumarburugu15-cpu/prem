@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
@@ -45,12 +46,41 @@ app.add_middleware(
     expose_headers=["Content-Disposition", "X-Praman-Sequence"],
 )
 
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Serve web_console static assets if present
+web_console_static = Path(__file__).resolve().parent.parent.parent / "web_console" / "static"
+if web_console_static.exists():
+    app.mount("/static", StaticFiles(directory=str(web_console_static)), name="static")
 
-@app.get("/")
-def root():
+web_console_template = Path(__file__).resolve().parent.parent.parent / "web_console" / "templates" / "index.html"
+
+
+@app.get("/", response_class=HTMLResponse)
+def root_web():
+    if web_console_template.exists():
+        with open(web_console_template, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h2>PRAMAN Unified Platform Online</h2>")
+
+
+@app.get("/verify/{opaque_token}", response_class=HTMLResponse)
+def verify_qr_route(opaque_token: str):
+    if web_console_template.exists():
+        with open(web_console_template, "r", encoding="utf-8") as f:
+            html = f.read()
+            # Auto-switch to verify tab in script
+            html = html.replace('loadTransporterData();', f'openCustomerVerify("{opaque_token}");')
+            return HTMLResponse(content=html)
+    return HTMLResponse("<h2>PRAMAN Customer QR Verification</h2>")
+
+
+@app.get("/api/health")
+def api_health():
     return {
         "project": "PRAMAN Evidence Intelligence Platform",
         "status": "ONLINE",
