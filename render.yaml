@@ -30,6 +30,6 @@ services:
 databases:
   - name: praman-db
     databaseName: praman
-    user: postgres
+    user: praman_user
     plan: free
     region: oregon
