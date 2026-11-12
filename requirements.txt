@@ -22,7 +22,6 @@ pyjwt>=2.8.0,<3.0.0
 pillow>=10.2.0
 opencv-python-headless>=4.9.0.80
 numpy>=1.26.0,<3.0.0
-scikit-learn>=1.4.0
 
 # Utilities
 qrcode>=7.4.2

@@ -22,3 +22,9 @@ services:
         value: data/evidence
       - key: CORS_ORIGINS
         value: '["*"]'
+      - key: MALLOC_ARENA_MAX
+        value: "2"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: PYTHONUNBUFFERED
+        value: "1"

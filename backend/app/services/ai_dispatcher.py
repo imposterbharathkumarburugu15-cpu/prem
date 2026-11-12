@@ -54,6 +54,15 @@ class AITaskDispatcher:
         """Enqueues evidence for background AI evaluation in a non-blocking fashion."""
         task_id = str(uuid.uuid4())
         with self._lock:
+            # Bound in-memory task states to latest 50 to prevent memory leak
+            if len(self.task_states) > 50:
+                oldest_keys = sorted(
+                    self.task_states.keys(),
+                    key=lambda k: self.task_states[k].get("created_at", 0)
+                )[:20]
+                for k in oldest_keys:
+                    self.task_states.pop(k, None)
+
             self.task_states[task_id] = {
                 "task_id": task_id,
                 "evidence_id": evidence_id,
@@ -104,19 +113,32 @@ class AITaskDispatcher:
 
             query_db = self._get_db()
             try:
-                prev_ev = query_db.query(Evidence).filter(Evidence.id != evidence_id).all()
-                for ev in prev_ev:
-                    if ev.image_hash:
-                        known_hashes.append(ev.image_hash)
-                    if hasattr(ev, "phash") and ev.phash:
-                        known_phashes.append(ev.phash)
+                # Query lightweight tuples limited to 100 recent entries to minimize memory footprint
+                ev_tuples = (
+                    query_db.query(Evidence.image_hash, Evidence.phash)
+                    .filter(Evidence.id != evidence_id)
+                    .order_by(Evidence.created_at.desc())
+                    .limit(100)
+                    .all()
+                )
+                for h, p in ev_tuples:
+                    if h:
+                        known_hashes.append(h)
+                    if p:
+                        known_phashes.append(p)
 
-                prev_ai = query_db.query(AIAssessment).filter(AIAssessment.evidence_id != evidence_id).all()
-                for ai in prev_ai:
-                    if ai.sha256 and ai.sha256 not in known_hashes:
-                        known_hashes.append(ai.sha256)
-                    if ai.phash and ai.phash not in known_phashes:
-                        known_phashes.append(ai.phash)
+                ai_tuples = (
+                    query_db.query(AIAssessment.sha256, AIAssessment.phash)
+                    .filter(AIAssessment.evidence_id != evidence_id)
+                    .order_by(AIAssessment.id.desc())
+                    .limit(100)
+                    .all()
+                )
+                for h, p in ai_tuples:
+                    if h and h not in known_hashes:
+                        known_hashes.append(h)
+                    if p and p not in known_phashes:
+                        known_phashes.append(p)
             finally:
                 query_db.close()
         except Exception as e:
@@ -138,6 +160,11 @@ class AITaskDispatcher:
                 f"action={assessment['governance']['recommended_action']}, "
                 f"transition={assessment['governance']['state_transition']}"
             )
+
+        # Free raw image bytes immediately to release memory back to OS
+        del raw_bytes
+        import gc
+        gc.collect()
 
         # 4. Update Evidence status and persist AIAssessment in DB
         if evidence_id:
@@ -260,6 +287,9 @@ class AITaskDispatcher:
                         self._queue.put(task_id)
                     else:
                         task["status"] = "FAILED"
+            finally:
+                import gc
+                gc.collect()
 
     def start(self):
         """Starts background worker thread for FastAPI lifespan."""

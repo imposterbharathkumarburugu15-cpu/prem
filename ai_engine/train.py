@@ -16,8 +16,17 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, models
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support, accuracy_score
+try:
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import classification_report, confusion_matrix, precision_recall_fscore_support, accuracy_score
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    train_test_split = None
+    classification_report = None
+    confusion_matrix = None
+    precision_recall_fscore_support = None
+    accuracy_score = None
+    SKLEARN_AVAILABLE = False
 
 
 # Seed for strict reproducibility
