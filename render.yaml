@@ -16,7 +16,6 @@ services:
         value: .
       - key: DATABASE_URL
         value: sqlite:///./data/praman.db
-        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: STORAGE_DIR
