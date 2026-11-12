@@ -1008,8 +1008,15 @@ def generate_retailer_qr(req: RetailerQrGenerateRequest, db: Session = Depends(g
     crop_code = batch.crop_type[:3].upper() if batch.crop_type else "PRM"
     sku = req.package_sku or f"SKU-{crop_code}-{str(uuid.uuid4())[:6].upper()}"
 
+    ret_org = None
+    if req.retailer_org_id:
+        ret_org = db.query(Organization).filter(Organization.id == req.retailer_org_id).first()
+    if not ret_org:
+        ret_org = db.query(Organization).filter(Organization.org_type == "RETAILER").first()
+    retailer_org_id = ret_org.id if ret_org else "org-retailer-01"
+
     inventory_item = RetailerInventory(
-        retailer_org_id=req.retailer_org_id or "org-retailer-01",
+        retailer_org_id=retailer_org_id,
         batch_id=batch.id,
         crop_type=batch.crop_type or "Organic Produce",
         available_quantity=req.package_weight_kg,
