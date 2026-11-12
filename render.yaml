@@ -15,9 +15,8 @@ services:
       - key: PYTHONPATH
         value: .
       - key: DATABASE_URL
-        fromDatabase:
-          name: praman-db
-          property: connectionString
+        value: sqlite:///./data/praman.db
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: STORAGE_DIR
@@ -26,10 +25,3 @@ services:
         value: '["*"]'
       - key: PORT
         value: 10000
-
-databases:
-  - name: praman-db
-    databaseName: praman
-    user: praman_user
-    plan: free
-    region: oregon
