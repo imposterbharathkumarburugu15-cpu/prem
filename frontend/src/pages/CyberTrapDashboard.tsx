@@ -2,24 +2,31 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
   Flame,
-  Bug,
   Lock,
   CheckCircle2,
   AlertTriangle,
-  Play,
   RefreshCw,
   FileCheck2,
   Activity,
-  Layers,
-  ArrowRight,
+  Sliders,
   ShieldCheck,
   Zap,
   Terminal,
   Database,
-  Sliders,
   XCircle,
   Eye,
+  Play,
+  ChevronRight,
+  Radio,
+  Shield,
+  Search,
 } from 'lucide-react';
+import { Card } from '../components/common/Card';
+import { Badge } from '../components/common/Badge';
+import { StatMetric } from '../components/common/StatMetric';
+import { Modal } from '../components/common/Modal';
+
+/* ───── Interfaces ───── */
 
 interface CyberEvent {
   id: string;
@@ -73,6 +80,46 @@ interface DetectionMetrics {
   total_incidents: number;
 }
 
+/* ───── Simulation buttons config ───── */
+
+const SCENARIOS: {
+  key: string;
+  label: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+}[] = [
+  { key: 'SQLI',       label: 'SQL Injection',   icon: '💉', color: '#DC2626', bgColor: '#FEF2F2', borderColor: '#FECACA' },
+  { key: 'CANARY',     label: 'Honeytoken Exfil', icon: '🍯', color: '#B45309', bgColor: '#FFFBEB', borderColor: '#FDE68A' },
+  { key: 'AUTH_BURST', label: 'Auth Stuffing',    icon: '💥', color: '#DC2626', bgColor: '#FEF2F2', borderColor: '#FECACA' },
+  { key: 'ADMIN_PROBE',label: 'Admin Recon',      icon: '🔍', color: '#0284C7', bgColor: '#F0F9FF', borderColor: '#BAE6FD' },
+];
+
+/* ───── Risk badge helper ───── */
+
+function riskBadge(level: string) {
+  const variant = level === 'CRITICAL' ? 'critical' : level === 'HIGH' ? 'warning' : 'info';
+  return <Badge variant={variant} size="sm">{level}</Badge>;
+}
+
+/* ───── Rule lifecycle badge ───── */
+
+function statusBadge(status: string) {
+  const map: Record<string, 'emerald' | 'info' | 'navy' | 'critical' | 'warning' | 'neutral'> = {
+    ACTIVE: 'emerald',
+    STAGING_VALIDATED: 'info',
+    APPROVED: 'navy',
+    REJECTED: 'critical',
+    PROPOSED: 'warning',
+  };
+  return <Badge variant={map[status] || 'neutral'} size="sm">{status}</Badge>;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CyberTrapDashboard — Rewritten for PRAMAN inline-style design system
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 export const CyberTrapDashboard: React.FC = () => {
   const [events, setEvents] = useState<CyberEvent[]>([]);
   const [incidents, setIncidents] = useState<CyberIncident[]>([]);
@@ -83,6 +130,8 @@ export const CyberTrapDashboard: React.FC = () => {
   const [verificationModal, setVerificationModal] = useState<any | null>(null);
   const [simulating, setSimulating] = useState(false);
   const [simFeedback, setSimFeedback] = useState<string | null>(null);
+
+  /* ───── Data fetching ───── */
 
   const fetchData = async () => {
     setLoading(true);
@@ -110,13 +159,13 @@ export const CyberTrapDashboard: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  /* ───── Simulation ───── */
 
   const runSimulation = async (scenario: string) => {
     setSimulating(true);
-    setSimFeedback(`Running local ${scenario} simulation...`);
+    setSimFeedback(`Running local ${scenario} simulation…`);
     try {
       if (scenario === 'SQLI') {
         await fetch('/api/v1/cybertrap/decoys/search', {
@@ -141,12 +190,10 @@ export const CyberTrapDashboard: React.FC = () => {
         await fetch('/api/v1/cybertrap/decoys/admin/db_dump');
       }
 
-      // Trigger threat analysis
       await fetch('/api/v1/cybertrap/intel/analyse', { method: 'POST' });
-      // Generate proposed rules
       await fetch('/api/v1/cybertrap/feedback/rules/generate', { method: 'POST' });
 
-      setSimFeedback(`Simulation '${scenario}' complete! Threat detected, classified & rule proposed.`);
+      setSimFeedback(`Simulation '${scenario}' complete — threat detected, classified & rule proposed.`);
       await fetchData();
     } catch (e) {
       setSimFeedback(`Simulation error: ${e}`);
@@ -154,6 +201,8 @@ export const CyberTrapDashboard: React.FC = () => {
       setSimulating(false);
     }
   };
+
+  /* ───── Rule actions ───── */
 
   const handleApproveRule = async (ruleId: string) => {
     await fetch(`/api/v1/cybertrap/feedback/rules/${ruleId}/approve`, {
@@ -165,16 +214,12 @@ export const CyberTrapDashboard: React.FC = () => {
   };
 
   const handleValidateStaging = async (ruleId: string) => {
-    await fetch(`/api/v1/cybertrap/feedback/rules/${ruleId}/validate-staging`, {
-      method: 'POST',
-    });
+    await fetch(`/api/v1/cybertrap/feedback/rules/${ruleId}/validate-staging`, { method: 'POST' });
     await fetchData();
   };
 
   const handleDeployRule = async (ruleId: string) => {
-    await fetch(`/api/v1/cybertrap/feedback/rules/${ruleId}/deploy`, {
-      method: 'POST',
-    });
+    await fetch(`/api/v1/cybertrap/feedback/rules/${ruleId}/deploy`, { method: 'POST' });
     await fetchData();
   };
 
@@ -188,9 +233,7 @@ export const CyberTrapDashboard: React.FC = () => {
   };
 
   const handleAnchorIncident = async (incidentId: string) => {
-    await fetch(`/api/v1/cybertrap/audit/incidents/${incidentId}/anchor`, {
-      method: 'POST',
-    });
+    await fetch(`/api/v1/cybertrap/audit/incidents/${incidentId}/anchor`, { method: 'POST' });
     await fetchData();
   };
 
@@ -199,443 +242,559 @@ export const CyberTrapDashboard: React.FC = () => {
     setVerificationModal(res);
   };
 
+  /* ═══════════════════════ RENDER ═══════════════════════ */
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-rose-950/40 to-slate-900 border border-rose-500/30 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-          <ShieldAlert className="w-64 h-64 text-rose-400" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1280px', margin: '0 auto', paddingBottom: '48px' }}>
+
+      {/* ─── Header Banner ─── */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 60%, #40916C 100%)',
+          borderRadius: '12px',
+          padding: '28px 32px',
+          position: 'relative',
+          overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        {/* Watermark icon */}
+        <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.07, pointerEvents: 'none' }}>
+          <ShieldAlert size={200} color="#fff" />
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', position: 'relative', zIndex: 1 }}>
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold tracking-wider uppercase mb-2 border border-rose-500/30">
-              <Zap className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-              PRAMAN CyberTrap Intelligence Module
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '9999px',
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                color: '#D8F3DC',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase' as const,
+                marginBottom: '8px',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              <Shield size={13} />
+              PRAMAN CyberTrap Intelligence
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em', margin: 0 }}>
               Adaptive Agricultural Cyber Defense Command
             </h1>
-            <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-              Deterministic honeypots, explainable threat classification, human-approved defensive feedback loops,
-              and tamper-evident blockchain audit anchoring.
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginTop: '4px', maxWidth: '640px', lineHeight: 1.5 }}>
+              Deterministic honeypots, explainable threat classification, human-approved defensive feedback loops, and tamper-evident blockchain audit anchoring.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium border border-slate-700 transition"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh Telemetry
-            </button>
-          </div>
+
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              color: '#FFFFFF',
+              fontSize: '13px',
+              fontWeight: 600,
+              border: '1px solid rgba(255,255,255,0.2)',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s',
+            }}
+          >
+            <RefreshCw size={14} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
+            Refresh Telemetry
+          </button>
         </div>
       </div>
 
-      {/* KPI Metrics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Activity className="w-4 h-4 text-emerald-400" />
-            Detection Rate
-          </div>
-          <div className="text-2xl font-bold text-white mt-2">
-            {metrics ? `${metrics.detection_rate_pct}%` : '100%'}
-          </div>
-          <div className="text-xs text-emerald-400 mt-1 font-medium">Deterministic Rule Trigger</div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            False Positive Rate
-          </div>
-          <div className="text-2xl font-bold text-cyan-400 mt-2">
-            {metrics ? `${metrics.false_positive_rate_pct}%` : '0.0%'}
-          </div>
-          <div className="text-xs text-cyan-500/80 mt-1 font-medium">Physically Isolated Decoys</div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Flame className="w-4 h-4 text-amber-400" />
-            Active Incidents
-          </div>
-          <div className="text-2xl font-bold text-amber-400 mt-2">
-            {incidents.length}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">Classified Threats</div>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Sliders className="w-4 h-4 text-purple-400" />
-            Defensive Rules
-          </div>
-          <div className="text-2xl font-bold text-purple-400 mt-2">
-            {rules.length}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">Adaptive Policies</div>
-        </div>
+      {/* ─── KPI Stat Cards ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        <StatMetric
+          label="Detection Rate"
+          value={metrics ? `${metrics.detection_rate_pct}%` : '100%'}
+          subValue="Deterministic Rule Trigger"
+          icon={Activity}
+          variant="emerald"
+        />
+        <StatMetric
+          label="False Positive Rate"
+          value={metrics ? `${metrics.false_positive_rate_pct}%` : '0.0%'}
+          subValue="Physically Isolated Decoys"
+          icon={ShieldCheck}
+          variant="info"
+        />
+        <StatMetric
+          label="Active Incidents"
+          value={incidents.length}
+          subValue="Classified Threats"
+          icon={Flame}
+          variant="warning"
+        />
+        <StatMetric
+          label="Defensive Rules"
+          value={rules.length}
+          subValue="Adaptive Policies"
+          icon={Sliders}
+          variant="navy"
+        />
       </div>
 
-      {/* Simulator Test Launcher Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-rose-400" />
-            <div>
-              <div className="text-sm font-bold text-white">Live Attacker Simulator (Controlled Local Scenarios)</div>
-              <div className="text-xs text-slate-400">Trigger repeatable attack simulations to observe detection and response.</div>
-            </div>
+      {/* ─── Live Attacker Simulator ─── */}
+      <Card
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Terminal size={16} color="#DC2626" />
+            <span>Live Attacker Simulator</span>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+        }
+        subtitle="Trigger repeatable attack simulations to observe detection and response (controlled local scenarios)."
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {SCENARIOS.map((s) => (
             <button
-              onClick={() => runSimulation('SQLI')}
+              key={s.key}
+              onClick={() => runSimulation(s.key)}
               disabled={simulating}
-              className="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded-lg text-xs font-semibold transition"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '7px 14px',
+                borderRadius: '6px',
+                backgroundColor: s.bgColor,
+                color: s.color,
+                fontSize: '12px',
+                fontWeight: 600,
+                border: `1px solid ${s.borderColor}`,
+                cursor: simulating ? 'not-allowed' : 'pointer',
+                opacity: simulating ? 0.6 : 1,
+                transition: 'opacity 0.15s, box-shadow 0.15s',
+              }}
             >
-              💉 SQL Injection
+              <span>{s.icon}</span>
+              {s.label}
             </button>
-            <button
-              onClick={() => runSimulation('CANARY')}
-              disabled={simulating}
-              className="px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-semibold transition"
-            >
-              🍯 Honeytoken Exfil
-            </button>
-            <button
-              onClick={() => runSimulation('AUTH_BURST')}
-              disabled={simulating}
-              className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/40 rounded-lg text-xs font-semibold transition"
-            >
-              💥 Auth Stuffing
-            </button>
-            <button
-              onClick={() => runSimulation('ADMIN_PROBE')}
-              disabled={simulating}
-              className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-semibold transition"
-            >
-              🔍 Admin Recon
-            </button>
-          </div>
+          ))}
         </div>
+
         {simFeedback && (
-          <div className="mt-3 p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-400">
-            &gt; {simFeedback}
+          <div
+            style={{
+              marginTop: '12px',
+              padding: '10px 14px',
+              borderRadius: '6px',
+              backgroundColor: '#F0FFF4',
+              border: '1px solid #B2F2BB',
+              fontSize: '12px',
+              fontFamily: 'var(--font-mono)',
+              color: '#087F5B',
+            }}
+          >
+            ▸ {simFeedback}
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* Main Threat Intelligence & Adaptive Response Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Incidents List */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-rose-400" />
-              <h2 className="text-base font-bold text-white">Threat Incidents</h2>
+      {/* ─── Main 2-Column Grid: Incidents + Detail ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '20px' }}>
+
+        {/* Left: Incidents list */}
+        <Card
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldAlert size={16} color="#DC2626" />
+              <span>Threat Incidents</span>
             </div>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
-              {incidents.length} Detected
-            </span>
-          </div>
-
-          <div className="space-y-3 flex-1 overflow-y-auto max-h-[460px] pr-1">
+          }
+          badge={<Badge variant="neutral" size="sm">{incidents.length} Detected</Badge>}
+          noPadding
+        >
+          <div style={{ maxHeight: '480px', overflowY: 'auto' }}>
             {incidents.length === 0 ? (
-              <div className="text-center py-10 text-slate-500 text-xs">
+              <div style={{ padding: '40px 20px', textAlign: 'center', color: '#98A2B3', fontSize: '13px' }}>
                 No active threat incidents detected. Run a simulator scenario above.
               </div>
             ) : (
               incidents.map((inc) => {
                 const isSelected = selectedIncident?.id === inc.id;
-                const isCritical = inc.risk_level === 'CRITICAL';
                 return (
                   <div
                     key={inc.id}
                     onClick={() => setSelectedIncident(inc)}
-                    className={`p-3.5 rounded-xl border cursor-pointer transition ${
-                      isSelected
-                        ? 'bg-rose-950/30 border-rose-500/50 shadow-md'
-                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
-                    }`}
+                    style={{
+                      padding: '14px 20px',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #F2F4F7',
+                      backgroundColor: isSelected ? '#F0FFF4' : '#FFFFFF',
+                      borderLeft: isSelected ? '3px solid #2D6A4F' : '3px solid transparent',
+                      transition: 'background-color 0.15s, border-color 0.15s',
+                    }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-xs font-bold px-2 py-0.5 rounded-md ${
-                          isCritical
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        }`}
-                      >
-                        {inc.risk_level}
-                      </span>
-                      <span className="text-[11px] text-slate-400 font-mono">{inc.category}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      {riskBadge(inc.risk_level)}
+                      <span style={{ fontSize: '11px', color: '#98A2B3', fontFamily: 'var(--font-mono)' }}>{inc.category}</span>
                     </div>
-                    <div className="text-sm font-semibold text-white mt-1.5 truncate">{inc.description}</div>
-                    <div className="flex items-center justify-between mt-2 text-xs text-slate-400">
-                      <span>IP: <code className="text-slate-300">{inc.source_ip}</code></span>
-                      <span className="font-mono">{inc.event_count} events</span>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#101828', marginBottom: '6px', lineHeight: 1.35 }}>
+                      {inc.description}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#667085' }}>
+                      <span>IP: <code style={{ fontFamily: 'var(--font-mono)', color: '#344054' }}>{inc.source_ip}</code></span>
+                      <span style={{ fontFamily: 'var(--font-mono)' }}>{inc.event_count} events</span>
                     </div>
                   </div>
                 );
               })
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Middle Column: Selected Incident Explainability & Blockchain Anchor */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col lg:col-span-2">
+        {/* Right: Selected Incident Detail */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {selectedIncident ? (
-            <div className="space-y-5 flex-1">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-800 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                      {selectedIncident.risk_level} RISK
-                    </span>
-                    <span className="text-sm font-mono text-slate-300 font-bold">{selectedIncident.category}</span>
+            <>
+              {/* Incident header card */}
+              <Card>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      {riskBadge(selectedIncident.risk_level)}
+                      <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#344054' }}>
+                        {selectedIncident.category}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#101828', margin: 0 }}>
+                      {selectedIncident.description}
+                    </h3>
                   </div>
-                  <h3 className="text-lg font-bold text-white mt-1">{selectedIncident.description}</h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedIncident.ledger_checkpoint_id ? (
-                    <button
-                      onClick={() => handleVerifyIncident(selectedIncident.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold border border-emerald-500/40 transition"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      Verify on Ledger
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleAnchorIncident(selectedIncident.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold border border-cyan-500/40 transition"
-                    >
-                      <Database className="w-3.5 h-3.5 text-cyan-400" />
-                      Anchor to Ledger
-                    </button>
-                  )}
-                </div>
-              </div>
 
-              {/* Explainability Section */}
-              <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
-                <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Eye className="w-4 h-4 text-cyan-400" />
-                  Explainable Rule-Based Trigger Rationale
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {selectedIncident.ledger_checkpoint_id ? (
+                      <button
+                        onClick={() => handleVerifyIncident(selectedIncident.id)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '7px 14px', borderRadius: '6px',
+                          backgroundColor: '#EBFBEE', color: '#087F5B', fontSize: '12px', fontWeight: 600,
+                          border: '1px solid #B2F2BB', cursor: 'pointer',
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        Verify on Ledger
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAnchorIncident(selectedIncident.id)}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '7px 14px', borderRadius: '6px',
+                          backgroundColor: '#F0F9FF', color: '#0284C7', fontSize: '12px', fontWeight: 600,
+                          border: '1px solid #BAE6FD', cursor: 'pointer',
+                        }}
+                      >
+                        <Database size={14} />
+                        Anchor to Ledger
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs font-mono text-slate-300 bg-slate-900/80 p-3 rounded-lg border border-slate-800 space-y-1">
-                  <div><strong>Primary Rule:</strong> {selectedIncident.explanation?.primary_rule || 'N/A'}</div>
-                  <div><strong>Source IP:</strong> {selectedIncident.source_ip}</div>
-                  <div><strong>Trigger Path:</strong> {selectedIncident.explanation?.event_path || 'Decoy Route'}</div>
+              </Card>
+
+              {/* Explainability card */}
+              <Card
+                title={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Eye size={16} color="#0284C7" />
+                    <span>Explainable Rule-Based Trigger Rationale</span>
+                  </div>
+                }
+              >
+                <div
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '6px',
+                    backgroundColor: '#F8FAFC',
+                    border: '1px solid #E4E7EC',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '12px',
+                    color: '#344054',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  <div><strong style={{ color: '#101828' }}>Primary Rule:</strong> {selectedIncident.explanation?.primary_rule || 'N/A'}</div>
+                  <div><strong style={{ color: '#101828' }}>Source IP:</strong> {selectedIncident.source_ip}</div>
+                  <div><strong style={{ color: '#101828' }}>Trigger Path:</strong> {selectedIncident.explanation?.event_path || 'Decoy Route'}</div>
+
                   {selectedIncident.explanation?.all_rules && (
-                    <div className="pt-2">
-                      <div className="text-slate-400 font-sans font-semibold mb-1">Corroborating Evidence:</div>
+                    <div style={{ marginTop: '12px', borderTop: '1px solid #E4E7EC', paddingTop: '10px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-sans)', color: '#344054', marginBottom: '6px' }}>
+                        Corroborating Evidence:
+                      </div>
                       {selectedIncident.explanation.all_rules.map((r: any, idx: number) => (
-                        <div key={idx} className="text-emerald-400 pl-2">
-                          • [{r.rule}] {r.reason} (Confidence: {r.confidence * 100}%)
+                        <div key={idx} style={{ color: '#087F5B', paddingLeft: '8px', marginBottom: '2px' }}>
+                          • [{r.rule}] {r.reason} (Confidence: {Math.round(r.confidence * 100)}%)
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
 
-              {/* Blockchain Proof Bar */}
-              <div className="bg-slate-950 rounded-xl p-4 border border-slate-800 space-y-2">
-                <div className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileCheck2 className="w-4 h-4 text-purple-400" />
-                  Tamper-Evident Ledger Integrity
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+              {/* Ledger integrity card */}
+              <Card
+                title={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileCheck2 size={16} color="#7C3AED" />
+                    <span>Tamper-Evident Ledger Integrity</span>
+                  </div>
+                }
+              >
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   <div>
-                    <span className="text-slate-500">Canonical SHA-256 Digest:</span>
-                    <div className="text-slate-300 truncate" title={selectedIncident.canonical_report_hash}>
+                    <div style={{ fontSize: '11px', fontWeight: 500, color: '#98A2B3', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: '4px' }}>
+                      Canonical SHA-256 Digest
+                    </div>
+                    <div
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: '#344054', wordBreak: 'break-all' as const }}
+                      title={selectedIncident.canonical_report_hash}
+                    >
                       {selectedIncident.canonical_report_hash || 'Pending Calculation'}
                     </div>
                   </div>
                   <div>
-                    <span className="text-slate-500">Ledger Checkpoint Block:</span>
-                    <div className="text-emerald-400 truncate">
+                    <div style={{ fontSize: '11px', fontWeight: 500, color: '#98A2B3', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: '4px' }}>
+                      Ledger Checkpoint Block
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: selectedIncident.ledger_checkpoint_id ? '#087F5B' : '#98A2B3', wordBreak: 'break-all' as const }}>
                       {selectedIncident.ledger_checkpoint_id || 'Not Yet Anchored'}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </Card>
+            </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
-              Select an incident from the left to inspect explainability and audit trail.
-            </div>
+            <Card>
+              <div style={{ padding: '40px', textAlign: 'center', color: '#98A2B3', fontSize: '13px' }}>
+                Select an incident from the left to inspect explainability and audit trail.
+              </div>
+            </Card>
           )}
         </div>
       </div>
 
-      {/* Adaptive Feedback & Human-Approval Defensive Rules Section */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Sliders className="w-5 h-5 text-purple-400" />
-              <h2 className="text-base font-bold text-white">Adaptive Defensive Feedback Loop</h2>
-            </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Invariant F-61: Defensive policies require explicit human approval and staging validation before active deployment.
-            </p>
+      {/* ─── Adaptive Feedback Loop: Rules Table ─── */}
+      <Card
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sliders size={16} color="#7C3AED" />
+            <span>Adaptive Defensive Feedback Loop</span>
           </div>
+        }
+        subtitle="Invariant F-61: Defensive policies require explicit human approval and staging validation before active deployment."
+        actions={
           <button
             onClick={() => fetch('/api/v1/cybertrap/feedback/rules/generate', { method: 'POST' }).then(fetchData)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-semibold border border-purple-500/40 transition"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '7px 14px', borderRadius: '6px',
+              backgroundColor: '#F5F3FF', color: '#7C3AED', fontSize: '12px', fontWeight: 600,
+              border: '1px solid #DDD6FE', cursor: 'pointer',
+            }}
           >
-            <Zap className="w-3.5 h-3.5 text-purple-400" />
+            <Zap size={13} />
             Generate Rule Proposals
           </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+        }
+        noPadding
+      >
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase text-[11px]">
-                <th className="py-2.5 px-3">Rule Type</th>
-                <th className="py-2.5 px-3">Target Subject</th>
-                <th className="py-2.5 px-3">Parameters</th>
-                <th className="py-2.5 px-3">Lifecycle Status</th>
-                <th className="py-2.5 px-3">Human Approver</th>
-                <th className="py-2.5 px-3 text-right">Adaptive Action</th>
+              <tr style={{ borderBottom: '1px solid #E4E7EC' }}>
+                {['Rule Type', 'Target Subject', 'Parameters', 'Status', 'Human Approver', ''].map((h, i) => (
+                  <th
+                    key={i}
+                    style={{
+                      padding: '10px 16px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#667085',
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '0.04em',
+                      textAlign: i === 5 ? 'right' as const : 'left' as const,
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody>
               {rules.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-500">
+                  <td colSpan={6} style={{ padding: '40px 16px', textAlign: 'center', color: '#98A2B3', fontSize: '13px' }}>
                     No defensive rules currently active or proposed.
                   </td>
                 </tr>
               ) : (
-                rules.map((rule) => {
-                  return (
-                    <tr key={rule.id} className="hover:bg-slate-800/30 transition font-sans">
-                      <td className="py-3 px-3 font-mono font-bold text-purple-300">{rule.rule_type}</td>
-                      <td className="py-3 px-3 font-mono text-slate-200">{rule.target_value}</td>
-                      <td className="py-3 px-3 text-xs text-slate-400 font-mono">
-                        {rule.parameters ? JSON.stringify(rule.parameters) : '-'}
-                      </td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded ${
-                            rule.status === 'ACTIVE'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : rule.status === 'STAGING_VALIDATED'
-                              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                              : rule.status === 'APPROVED'
-                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                              : rule.status === 'REJECTED'
-                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          }`}
+                rules.map((rule) => (
+                  <tr key={rule.id} style={{ borderBottom: '1px solid #F2F4F7', transition: 'background-color 0.1s' }}>
+                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#7C3AED', fontSize: '12px' }}>
+                      {rule.rule_type}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', color: '#344054', fontSize: '12px' }}>
+                      {rule.target_value}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', color: '#667085', fontSize: '11px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                      {rule.parameters ? JSON.stringify(rule.parameters) : '—'}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      {statusBadge(rule.status)}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '12px', color: '#667085' }}>
+                      {rule.approved_by || 'Awaiting Approval'}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right' as const, whiteSpace: 'nowrap' as const }}>
+                      {rule.status === 'PROPOSED' && (
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => handleApproveRule(rule.id)}
+                            style={{
+                              padding: '5px 12px', borderRadius: '5px',
+                              backgroundColor: '#2D6A4F', color: '#FFFFFF', fontSize: '12px', fontWeight: 600,
+                              border: 'none', cursor: 'pointer',
+                            }}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectRule(rule.id)}
+                            style={{
+                              padding: '5px 12px', borderRadius: '5px',
+                              backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '12px', fontWeight: 600,
+                              border: '1px solid #FECACA', cursor: 'pointer',
+                            }}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                      {rule.status === 'APPROVED' && (
+                        <button
+                          onClick={() => handleValidateStaging(rule.id)}
+                          style={{
+                            padding: '5px 12px', borderRadius: '5px',
+                            backgroundColor: '#F0F9FF', color: '#0284C7', fontSize: '12px', fontWeight: 600,
+                            border: '1px solid #BAE6FD', cursor: 'pointer',
+                          }}
                         >
-                          {rule.status}
+                          Dry-Run Staging
+                        </button>
+                      )}
+                      {rule.status === 'STAGING_VALIDATED' && (
+                        <button
+                          onClick={() => handleDeployRule(rule.id)}
+                          style={{
+                            padding: '5px 12px', borderRadius: '5px',
+                            backgroundColor: '#F5F3FF', color: '#7C3AED', fontSize: '12px', fontWeight: 600,
+                            border: '1px solid #DDD6FE', cursor: 'pointer',
+                          }}
+                        >
+                          Deploy to Production
+                        </button>
+                      )}
+                      {rule.status === 'ACTIVE' && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600, color: '#087F5B' }}>
+                          <CheckCircle2 size={13} />
+                          Enforcing (v{rule.version})
                         </span>
-                      </td>
-                      <td className="py-3 px-3 text-xs text-slate-300">{rule.approved_by || 'Awaiting Approval'}</td>
-                      <td className="py-3 px-3 text-right space-x-1.5">
-                        {rule.status === 'PROPOSED' && (
-                          <>
-                            <button
-                              onClick={() => handleApproveRule(rule.id)}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded text-xs transition"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleRejectRule(rule.id)}
-                              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-rose-300 font-semibold rounded text-xs transition"
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
-                        {rule.status === 'APPROVED' && (
-                          <button
-                            onClick={() => handleValidateStaging(rule.id)}
-                            className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded text-xs transition"
-                          >
-                            Dry-Run Staging
-                          </button>
-                        )}
-                        {rule.status === 'STAGING_VALIDATED' && (
-                          <button
-                            onClick={() => handleDeployRule(rule.id)}
-                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded text-xs transition"
-                          >
-                            Deploy to Production
-                          </button>
-                        )}
-                        {rule.status === 'ACTIVE' && (
-                          <span className="text-xs font-semibold text-emerald-400 flex items-center justify-end gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Enforcing (v{rule.version})
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
-      {/* Verification Result Modal */}
-      {verificationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-lg font-bold text-white">Cryptographic Ledger Proof</h3>
-              </div>
-              <button
-                onClick={() => setVerificationModal(null)}
-                className="text-slate-400 hover:text-white"
-              >
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+      {/* ─── Verification Modal ─── */}
+      <Modal
+        isOpen={!!verificationModal}
+        onClose={() => setVerificationModal(null)}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileCheck2 size={18} color="#087F5B" />
+            Cryptographic Ledger Proof
+          </div>
+        }
+        size="medium"
+      >
+        {verificationModal && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '8px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E4E7EC',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '12px',
+                lineHeight: 2,
+              }}
+            >
               <div>
-                <span className="text-slate-500">Status: </span>
-                <span className={verificationModal.is_intact ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                <span style={{ color: '#98A2B3' }}>Status: </span>
+                <span style={{ fontWeight: 700, color: verificationModal.is_intact ? '#087F5B' : '#DC2626' }}>
                   {verificationModal.status}
                 </span>
               </div>
               <div>
-                <span className="text-slate-500">Report SHA-256 Digest: </span>
-                <div className="text-slate-300 break-all">{verificationModal.canonical_report_hash}</div>
+                <span style={{ color: '#98A2B3' }}>Report SHA-256 Digest: </span>
+                <span style={{ color: '#344054', wordBreak: 'break-all' as const }}>{verificationModal.canonical_report_hash}</span>
               </div>
               <div>
-                <span className="text-slate-500">Ledger Block Checkpoint: </span>
-                <div className="text-cyan-400">{verificationModal.ledger_checkpoint_id}</div>
+                <span style={{ color: '#98A2B3' }}>Ledger Block Checkpoint: </span>
+                <span style={{ color: '#0284C7' }}>{verificationModal.ledger_checkpoint_id}</span>
               </div>
               <div>
-                <span className="text-slate-500">Hash Chain Integrity: </span>
-                <span className="text-emerald-400">VERIFIED CONTINUOUS (Zero Tampering)</span>
+                <span style={{ color: '#98A2B3' }}>Hash Chain Integrity: </span>
+                <span style={{ color: '#087F5B', fontWeight: 600 }}>VERIFIED CONTINUOUS (Zero Tampering)</span>
               </div>
             </div>
-            <div className="text-right">
+
+            <div style={{ textAlign: 'right' }}>
               <button
                 onClick={() => setVerificationModal(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold"
+                style={{
+                  padding: '8px 18px', borderRadius: '6px',
+                  backgroundColor: '#F2F4F7', color: '#344054', fontSize: '13px', fontWeight: 600,
+                  border: '1px solid #E4E7EC', cursor: 'pointer',
+                }}
               >
-                Close Verification
+                Close
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
+
+      {/* Spin animation for the refresh icon */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
-

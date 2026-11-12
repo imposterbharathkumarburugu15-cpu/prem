@@ -12,6 +12,7 @@ from backend.app.api.v1.platform import router as platform_router
 from backend.app.api.v1.events import router as events_router
 from backend.app.api.v1.cybertrap_decoys import router as cybertrap_decoys_router
 from backend.app.api.v1.cybertrap_intel import router as cybertrap_intel_router
+from backend.app.api.v1.cybertrap_rules import router as cybertrap_rules_router
 from backend.app.api.v1.cybertrap_feedback import router as cybertrap_feedback_router
 from backend.app.api.v1.cybertrap_audit import router as cybertrap_audit_router
 
@@ -20,6 +21,7 @@ api_router = APIRouter()
 # take precedence over generic parameterized routes (e.g. /evidence/{evidence_id})
 api_router.include_router(cybertrap_decoys_router)
 api_router.include_router(cybertrap_intel_router)
+api_router.include_router(cybertrap_rules_router)
 api_router.include_router(cybertrap_feedback_router)
 api_router.include_router(cybertrap_audit_router)
 api_router.include_router(health_router)

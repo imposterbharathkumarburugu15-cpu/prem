@@ -23,6 +23,7 @@ from backend.app.models.supply_chain import (
     ProcurementOrder,
     RetailerInventory,
     ChallengeResponse,
+    BusinessEvent,
 )
 from backend.app.models.evidence import Evidence
 from backend.app.models.farm import Farm
@@ -909,7 +910,7 @@ def get_retailer_qr_image(
     img = qr.make_image(fill_color="#1B4332", back_color="#FFFFFF")
 
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    img.save(buf)
     buf.seek(0)
     return Response(
         content=buf.getvalue(),
@@ -988,7 +989,7 @@ def get_retailer_certificate_image(token: str, db: Session = Depends(get_db)):
     draw.text((40, 985), "PRAMAN Evidence-First Agricultural Provenance Platform  |  praman.agri", fill="#94A3B8")
 
     buf = io.BytesIO()
-    img.save(buf, format="PNG")
+    img.save(buf)
     buf.seek(0)
     return Response(
         content=buf.getvalue(),
@@ -2807,41 +2808,47 @@ def run_5min_demo_pipeline(db: Session = Depends(get_db)):
         db.add(pt)
 
     # Stage 5: Business Events Lineage
+    _sys_actor = "SYSTEM"
     be1 = BusinessEvent(
         event_type="BATCH_CREATED",
         batch_id=b.id,
         organization_id=centre_org.id if centre_org else None,
-        canonical_payload_json=json.dumps({"batch_code": b_code, "crop_type": "Organic Cotton", "quantity": 1000.0}),
-        status="VERIFIED",
+        actor_id=_sys_actor, actor_role="SYSTEM",
+        payload_json=json.dumps({"batch_code": b_code, "crop_type": "Organic Cotton", "quantity": 1000.0}),
+        verification_status="VERIFIED",
     )
     be2 = BusinessEvent(
         event_type="SHIPMENT_PICKUP_CONFIRMED",
         shipment_id=sh.id,
         batch_id=b.id,
         organization_id=trans_org.id if trans_org else None,
-        canonical_payload_json=json.dumps({"shipment_code": s_code, "vehicle_reg": "TS 01 AB 4021"}),
-        status="VERIFIED",
+        actor_id=_sys_actor, actor_role="SYSTEM",
+        payload_json=json.dumps({"shipment_code": s_code, "vehicle_reg": "TS 01 AB 4021"}),
+        verification_status="VERIFIED",
     )
     be3 = BusinessEvent(
         event_type="WEIGHT_RECORDED",
         batch_id=b.id,
         organization_id=centre_org.id if centre_org else None,
-        canonical_payload_json=json.dumps({"scale_id": "SCALE-NIST-01", "gross_kg": 1000.0}),
-        status="VERIFIED",
+        actor_id=_sys_actor, actor_role="SYSTEM",
+        payload_json=json.dumps({"scale_id": "SCALE-NIST-01", "gross_kg": 1000.0}),
+        verification_status="VERIFIED",
     )
     be4 = BusinessEvent(
         event_type="QUALITY_INSPECTION_COMPLETED",
         batch_id=b.id,
         organization_id=centre_org.id if centre_org else None,
-        canonical_payload_json=json.dumps({"grade": "GRADE_A", "decision": "ACCEPTED"}),
-        status="VERIFIED",
+        actor_id=_sys_actor, actor_role="SYSTEM",
+        payload_json=json.dumps({"grade": "GRADE_A", "decision": "ACCEPTED"}),
+        verification_status="VERIFIED",
     )
     be5 = BusinessEvent(
         event_type="RETAIL_RECEIPT_CONFIRMED",
         batch_id=b.id,
         organization_id=ret_org.id if ret_org else None,
-        canonical_payload_json=json.dumps({"token": token, "shelf": "Bay 4"}),
-        status="VERIFIED",
+        actor_id=_sys_actor, actor_role="SYSTEM",
+        payload_json=json.dumps({"token": token, "shelf": "Bay 4"}),
+        verification_status="VERIFIED",
     )
     db.add_all([be1, be2, be3, be4, be5])
 

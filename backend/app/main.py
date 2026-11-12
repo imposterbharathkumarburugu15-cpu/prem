@@ -70,6 +70,11 @@ app.add_middleware(
     expose_headers=["Content-Disposition", "X-Praman-Sequence"],
 )
 
+from backend.app.core.cybertrap_middleware import CyberTrapDefensiveMiddleware
+
+# CyberTrap Dynamic Defensive Rule Enforcement Middleware
+app.add_middleware(CyberTrapDefensiveMiddleware)
+
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from backend.app.api.v1.cybertrap_decoys import router as cybertrap_decoys_router
