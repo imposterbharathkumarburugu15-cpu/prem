@@ -1305,7 +1305,7 @@ def _format_ai_forensics(ev: Evidence, ai_assess: Optional[AIAssessment]) -> Dic
             "clipping_status": "NORMAL" if exposure_valid else "CLIPPING_DETECTED",
         },
         "ela_variance": ela_var,
-        "ela_status": "SUSPICIOUS_ELA_DISPARITY" if is_suspicious_tamper else "NORMAL_COMPRESSION",
+        "ela_status": "TAMPER_SUSPECTED" if is_suspicious_tamper else "NORMAL_COMPRESSION",
         "noise_residual_disparity": noise_var,
         "noise_status": "DISPARITY_DETECTED" if (noise_var > 0.04 or is_suspicious_tamper) else "UNIFORM_SENSOR_NOISE",
         "duplicate_classification": {

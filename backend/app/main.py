@@ -72,9 +72,13 @@ app.add_middleware(
 
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from backend.app.api.v1.cybertrap_decoys import router as cybertrap_decoys_router
 
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Mount direct decoy aliases at root for scanners probing without /api/v1
+app.include_router(cybertrap_decoys_router)
 
 # Serve web_console static assets if present
 web_console_static = Path(__file__).resolve().parent.parent.parent / "web_console" / "static"
@@ -127,6 +131,7 @@ def root_web():
 @app.get("/admin", response_class=HTMLResponse)
 @app.get("/farmer", response_class=HTMLResponse)
 @app.get("/architecture", response_class=HTMLResponse)
+@app.get("/cybertrap", response_class=HTMLResponse)
 def spa_routes():
     return get_spa_html()
 

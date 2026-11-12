@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ShieldCheck,
+  ShieldAlert,
   Truck,
   Building2,
   Store,
@@ -75,10 +76,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onOpenLiveDemo }) 
     ],
     EVIDENCE_INTEGRITY_OFFICER: [
       { path: '/officer', label: 'Evidence Command Center', icon: ShieldCheck },
+      { path: '/cybertrap', label: 'CyberTrap Defense Command', icon: ShieldAlert },
       { path: '/architecture', label: 'Explore PRAMAN Technology', icon: Cpu },
     ],
     PLATFORM_ADMINISTRATOR: [
       { path: '/admin', label: 'Platform Management', icon: Cpu },
+      { path: '/cybertrap', label: 'CyberTrap Defense Command', icon: ShieldAlert },
       { path: '/architecture', label: 'Explore PRAMAN Technology', icon: Cpu },
     ],
   };

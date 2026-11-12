@@ -38,20 +38,10 @@ class FarmerBase(BaseModel):
     @field_validator("phone_number", mode="before")
     @classmethod
     def check_phone_format(cls, v: Any) -> str:
-        clean = re.sub(r"[\s\-\(\)]", "", str(v))
-        if clean.startswith("0") and len(clean) == 11:
-            clean = "+91" + clean[1:]
-        elif not clean.startswith("+91") and len(clean) == 10 and clean[0] in "6789":
-            clean = "+91" + clean
-        elif not clean.startswith("+") and clean.startswith("91") and len(clean) == 12:
-            clean = "+" + clean
-        if not validate_indian_phone(clean):
-            digits = re.sub(r"\D", "", clean)
-            if len(digits) >= 10:
-                clean = "+91" + digits[-10:]
-            else:
-                clean = "+919876543210"
-        return clean
+        s = str(v).strip()
+        if not re.match(INDIAN_PHONE_REGEX, s):
+            raise ValueError(f"Invalid Indian mobile phone format. Expected {INDIAN_PHONE_REGEX}, got: {s}")
+        return s
 
 
 class FarmerCreate(FarmerBase):

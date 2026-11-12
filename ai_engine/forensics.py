@@ -207,12 +207,14 @@ class ImageForensicsAnalyzer:
         )
 
         # AI generation detection:
-        # Fired ONLY if explicitly watermarked/tagged with AI generator software,
-        # OR exhibits severe 2D Fourier periodic upsampling grid artifacts combined with synthetic near-zero sensor noise
+        # Fired if explicitly watermarked/tagged with AI generator software,
+        # OR exhibits severe 2D Fourier periodic upsampling grid artifacts or noise disparity without camera EXIF
         is_ai_generated_suspected = is_ai_software_tagged or (
             not has_camera_hardware_exif
-            and is_spectral_anomalous
-            and noise_variance < 0.5
+            and (
+                (is_spectral_anomalous and noise_variance < 0.5)
+                or (noise_disparity >= self.noise_disparity_threshold)
+            )
         )
 
         # Tampering detection: Error Level Analysis variance, noise disparity between spliced patches, or synthetic injection

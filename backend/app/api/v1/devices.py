@@ -36,9 +36,16 @@ def register_device(
     key_pem = key_pem.strip()
 
     # 1. Verify farmer exists or auto-provision
-    farmer_id = payload.farmer_id or f"farmer_{uuid.uuid4().hex[:8]}"
-    farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
-    if not farmer:
+    if payload.farmer_id:
+        farmer = db.query(Farmer).filter(Farmer.id == payload.farmer_id).first()
+        if not farmer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Farmer with ID {payload.farmer_id} not found",
+            )
+        farmer_id = farmer.id
+    else:
+        farmer_id = f"farmer_{uuid.uuid4().hex[:8]}"
         clean_phone = f"+9198{str(abs(hash(str(farmer_id))))[:8]}"
         farmer = Farmer(
             id=str(farmer_id),

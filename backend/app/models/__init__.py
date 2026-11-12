@@ -24,6 +24,12 @@ from backend.app.models.supply_chain import (
     ChallengeResponse,
     BusinessEvent,
 )
+from backend.app.models.cybertrap import (
+    CyberTrapEvent,
+    CyberTrapIncident,
+    CyberTrapRule,
+    CyberTrapDecoyBatch,
+)
 
 __all__ = [
     "Farmer",
@@ -53,4 +59,8 @@ __all__ = [
     "RetailerInventory",
     "ChallengeResponse",
     "BusinessEvent",
+    "CyberTrapEvent",
+    "CyberTrapIncident",
+    "CyberTrapRule",
+    "CyberTrapDecoyBatch",
 ]
