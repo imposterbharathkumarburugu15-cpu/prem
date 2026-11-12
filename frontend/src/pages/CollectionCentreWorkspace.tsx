@@ -380,6 +380,38 @@ export const CollectionCentreWorkspace: React.FC = () => {
     }
   };
 
+  // Instant Transfer to Retailer
+  const handleQuickTransferToRetailer = async (b: any) => {
+    setActionMsg(null);
+    try {
+      await api.recordBusinessEvent({
+        event_type: 'BATCH_DISPATCHED',
+        batch_id: b.id,
+        payload: {
+          batch_id: b.id,
+          destination_org_id: 'ret-supermarkets-hyd',
+          dispatched_quantity: b.current_quantity,
+          vehicle_reg: 'TS-07-EK-8114',
+          notes: `Instant transfer from Collection Centre to Retailer Store`,
+        },
+      });
+
+      setBatches((prev) =>
+        prev.map((item) => (item.id === b.id ? { ...item, stage: 'IN_TRANSIT_TO_RETAIL' } : item))
+      );
+
+      setActionMsg({
+        type: 'success',
+        text: `🚀 Transferred to Retailer: Batch '${b.batch_code}' is now live in Retailer Workspace ready for store intake & QR minting!`,
+      });
+    } catch (err: any) {
+      setActionMsg({
+        type: 'error',
+        text: `Transfer failed: ${err.message || 'Error'}`,
+      });
+    }
+  };
+
   // Submit Batch Dispatch
   const handleDispatchSubmit = async () => {
     if (!dispatchBatch) return;
@@ -691,6 +723,27 @@ export const CollectionCentreWorkspace: React.FC = () => {
                             <span>Split</span>
                           </button>
                           <button
+                            onClick={() => handleQuickTransferToRetailer(b)}
+                            style={{
+                              padding: '5px 11px',
+                              borderRadius: '6px',
+                              backgroundColor: '#0F766E',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              boxShadow: '0 2px 4px rgba(15, 118, 110, 0.25)',
+                            }}
+                            title="Instant one-click transfer to Retailer Workspace"
+                          >
+                            <Send size={12} />
+                            <span>Transfer to Retailer</span>
+                          </button>
+                          <button
                             onClick={() => {
                               setDispatchBatch(b);
                               setDispatchQty(b.current_quantity.toString());
@@ -710,8 +763,8 @@ export const CollectionCentreWorkspace: React.FC = () => {
                               gap: '4px',
                             }}
                           >
-                            <Send size={12} />
-                            <span>Dispatch</span>
+                            <Truck size={12} />
+                            <span>Custom Dispatch</span>
                           </button>
                           <button
                             onClick={() => setTimelineBatchId(b.batch_code)}

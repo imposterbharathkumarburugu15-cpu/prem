@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIn
 import { offlineQueue } from '../storage/offlineQueue';
 import { syncService } from '../services/syncService';
 import { deviceKeystore } from '../crypto/keystore';
+import { useAppNotification } from '../context/NotificationContext';
 
 type CaptureSource = 'CAMERA' | 'FILE_UPLOAD';
 type LifecycleStage = 'SOWING' | 'VEGETATIVE' | 'FLOWERING' | 'HARVEST';
@@ -19,6 +20,8 @@ export const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({ fa
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [lastSubmissionId, setLastSubmissionId] = useState<string | null>(null);
 
+  const { showAlert } = useAppNotification();
+
   const stages: LifecycleStage[] = ['SOWING', 'VEGETATIVE', 'FLOWERING', 'HARVEST'];
 
   const handleCaptureAndQueue = async () => {
@@ -34,7 +37,7 @@ export const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({ fa
       };
 
       if (mockImagePayload.width < 640 || mockImagePayload.height < 480) {
-        Alert.alert('Quality Check Failed', 'Image resolution is too low. Minimum required: 640x480.');
+        showAlert('Quality Check Alert', 'Image resolution is too low. Minimum required: 640x480.', 'error');
         setIsProcessing(false);
         return;
       }
@@ -55,31 +58,33 @@ export const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({ fa
 
       // 4. Enqueue into persistent SQLite/AsyncStorage offline queue
       const queueItem = {
-        id: 'ev_' + Date.now(),
-        metadata: evidenceMetadata,
-        signature: signature,
-        filePath: mockImagePayload.uri,
-        createdAt: Date.now(),
-        retryCount: 0,
-        status: 'PENDING' as const,
+        evidence_id: 'ev_' + Date.now(),
+        device_id: 'dev_hw_' + farmerId.slice(0, 8),
+        sequence_number: 1,
+        envelope_json: JSON.stringify(evidenceMetadata),
+        signature_b64: signature,
+        image_path: mockImagePayload.uri,
+        image_hash: mockImagePayload.sha256,
       };
 
       await offlineQueue.enqueue(queueItem);
-      setLastSubmissionId(queueItem.id);
+      setLastSubmissionId(queueItem.evidence_id);
 
       // 5. Attempt immediate opportunistic sync if connected
       await syncService.triggerSync();
 
-      Alert.alert(
-        'Evidence Captured',
-        `Evidence securely recorded and signed with device hardware key.\nID: ${queueItem.id}`
+      showAlert(
+        'Evidence Captured & Signed',
+        `Evidence securely recorded with device hardware key.\nID: ${queueItem.evidence_id}`,
+        'success',
+        5000
       );
 
       if (onEvidenceCaptured) {
-        onEvidenceCaptured(queueItem.id);
+        onEvidenceCaptured(queueItem.evidence_id);
       }
     } catch (err: any) {
-      Alert.alert('Capture Error', err?.message || 'Failed to capture and sign evidence.');
+      showAlert('Capture Alert', err?.message || 'Failed to capture and sign evidence.', 'error');
     } finally {
       setIsProcessing(false);
     }

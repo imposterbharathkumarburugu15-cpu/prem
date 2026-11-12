@@ -724,8 +724,8 @@ class RetailerQrGenerateRequest(BaseModel):
 @router.get("/retailer/dashboard")
 def get_retailer_dashboard(db: Session = Depends(get_db)):
     batches = db.query(Batch).filter(
-        Batch.status.in_(("ACTIVE", "SPLIT")),
-        Batch.stage.in_(("IN_TRANSIT_TO_RETAIL", "AT_RETAILER", "AT_COLLECTION_CENTRE", "PROCESSED"))
+        Batch.status.notin_(("REJECTED", "DEPLETED")),
+        Batch.stage.in_(("IN_TRANSIT_TO_RETAIL", "AT_RETAILER", "AT_COLLECTION_CENTRE", "PROCESSED", "FARM_HARVESTED"))
     ).order_by(Batch.created_at.desc()).all()
     orders = db.query(ProcurementOrder).order_by(ProcurementOrder.created_at.desc()).all()
     inventory = db.query(RetailerInventory).order_by(RetailerInventory.created_at.desc()).all()

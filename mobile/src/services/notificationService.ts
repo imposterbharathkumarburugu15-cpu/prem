@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
-
 export interface NotificationItem {
   notification_id: string;
   evidence_id: string;
@@ -14,7 +12,7 @@ export class NotificationInboxService {
   private notifications: NotificationItem[] = [];
 
   receiveNotification(evidenceId: string, decision: "APPROVED" | "RETAKE_REQUESTED", notes: string): string {
-    const notifId = uuidv4 ? uuidv4() : `notif-${Date.now()}`;
+    const notifId = `notif-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const item: NotificationItem = {
       notification_id: notifId,
       evidence_id: evidenceId,

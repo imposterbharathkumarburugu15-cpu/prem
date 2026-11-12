@@ -56,6 +56,10 @@ export class OfflineSyncService {
     }
   }
 
+  async triggerSync(deviceId?: string): Promise<SyncResult[]> {
+    return this.syncAllPending(deviceId);
+  }
+
   async syncAllPending(deviceId?: string): Promise<SyncResult[]> {
     const pending = offlineQueue.getPendingItems(deviceId);
     const results: SyncResult[] = [];

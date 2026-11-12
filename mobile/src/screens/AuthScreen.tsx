@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { translations, SupportedLanguage } from '../i18n/catalogs';
+import { useAppNotification } from '../context/NotificationContext';
 
 interface AuthScreenProps {
   language: SupportedLanguage;
@@ -15,20 +16,28 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ language, onAuthSuccess 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const { showAlert } = useAppNotification();
+
   const t = translations[language] || translations['en'];
 
   const handleSubmit = async () => {
     setError(null);
     if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
+      const msg = 'Please enter a valid 10-digit mobile number.';
+      setError(msg);
+      showAlert('Invalid Mobile', msg, 'warning');
       return;
     }
     if (!pin || pin.length < 4) {
-      setError('PIN must be at least 4 digits.');
+      const msg = 'Security PIN must be at least 4 digits.';
+      setError(msg);
+      showAlert('Invalid PIN', msg, 'warning');
       return;
     }
     if (isRegistering && !fullName.trim()) {
-      setError('Please enter your full name.');
+      const msg = 'Please enter your full name.';
+      setError(msg);
+      showAlert('Name Required', msg, 'warning');
       return;
     }
 
@@ -42,7 +51,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ language, onAuthSuccess 
       };
       onAuthSuccess(mockFarmer);
     } catch (err: any) {
-      setError(err?.message || 'Authentication failed. Please check credentials.');
+      const msg = err?.message || 'Authentication failed. Please check credentials.';
+      setError(msg);
+      showAlert('Login Failed', msg, 'error');
     } finally {
       setLoading(false);
     }
