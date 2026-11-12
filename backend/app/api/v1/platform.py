@@ -749,7 +749,7 @@ def get_retailer_dashboard(db: Session = Depends(get_db)):
                 "quality_grade": b.quality_grade or "GRADE_A",
                 "stage": b.stage,
                 "status": "DISPATCHED" if b.stage == "IN_TRANSIT_TO_RETAIL" else "HUB_VERIFIED",
-                "origin": f"{b.farm.cluster_name if b.farm and b.farm.cluster_name else 'Adilabad Regional Hub'}",
+                "origin": f"{b.farm.farm_name} ({b.farm.district})" if b.farm and b.farm.farm_name else "Adilabad Regional Hub",
                 "eligible_for_qr": True,
             }
             for b in batches
