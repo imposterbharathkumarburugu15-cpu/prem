@@ -4,9 +4,18 @@ import logging
 from typing import Dict, Any, List, Optional, Union
 from PIL import Image
 import numpy as np
-import torch
-import torch.nn as nn
-from torchvision import transforms, models
+
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import transforms, models
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    nn = None
+    transforms = None
+    models = None
+    TORCH_AVAILABLE = False
 
 logger = logging.getLogger("praman.ai_engine.classifier")
 
@@ -46,9 +55,18 @@ class CropCategoryClassifier:
         self.weights_path = weights_path or os.path.join(
             os.path.dirname(__file__), "weights", "crop_mobilenet_v3.pth"
         )
-        self.device = torch.device("cpu")
         self.classes = list(self.DEFAULT_CLASSES)
         self.model = None
+
+        if not TORCH_AVAILABLE:
+            self.device = None
+            self.status = "MODEL_UNAVAILABLE"
+            self.error_message = "PyTorch / Torchvision is not installed in runtime environment."
+            self.transform = None
+            logger.info("Torch not installed; CropCategoryClassifier running in MODEL_UNAVAILABLE mode.")
+            return
+
+        self.device = torch.device("cpu")
         self.status = "INITIALIZING"
         self.error_message: Optional[str] = None
         self._load_model()
