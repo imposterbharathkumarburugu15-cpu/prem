@@ -5,8 +5,8 @@ services:
     region: oregon
     plan: free
     rootDir: .
-    buildCommand: "./build.sh"
-    startCommand: "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: "bash ./build.sh"
+    startCommand: "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-10000}"
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -22,5 +22,3 @@ services:
         value: data/evidence
       - key: CORS_ORIGINS
         value: '["*"]'
-      - key: PORT
-        value: 10000

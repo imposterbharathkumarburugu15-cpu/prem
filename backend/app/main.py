@@ -14,6 +14,17 @@ async def lifespan(app: FastAPI):
     # 1. Initialize tables if not already created
     try:
         Base.metadata.create_all(bind=engine)
+        # If database is fresh/empty (e.g. Render fresh deployment), auto-seed initial supply chain data
+        from backend.app.core.database import SessionLocal
+        from backend.app.models.user_org import Organization
+        from backend.app.services.synthetic_seeder import seed_synthetic_development_data
+
+        with SessionLocal() as db:
+            org_count = db.query(Organization).count()
+            if org_count == 0:
+                print("[STARTUP] Fresh database detected. Auto-seeding initial development supply chain data...")
+                seed_synthetic_development_data()
+                print("[STARTUP] Auto-seeding completed.")
     except Exception as e:
         print(f"Database init during lifespan startup: {e}")
 
