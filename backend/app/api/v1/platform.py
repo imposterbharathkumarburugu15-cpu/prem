@@ -539,7 +539,7 @@ def get_centre_dashboard(db: Session = Depends(get_db)):
     inspected = sum(1 for b in batches if b.quality_grade is not None)
     dispatched = sum(1 for b in batches if b.stage in ("IN_TRANSIT_TO_RETAIL", "AT_RETAILER"))
 
-    dock_shipments = db.query(Shipment).filter(Shipment.stage.in_(("DELIVERED", "IN_TRANSIT", "PICKED_UP"))).order_by(Shipment.created_at.desc()).all()
+    dock_shipments = db.query(Shipment).filter(Shipment.stage.in_(("DELIVERED", "IN_TRANSIT", "PICKED_UP", "ASSIGNED"))).order_by(Shipment.created_at.desc()).all()
 
     return {
         "metrics": {
@@ -723,7 +723,10 @@ class RetailerQrGenerateRequest(BaseModel):
 
 @router.get("/retailer/dashboard")
 def get_retailer_dashboard(db: Session = Depends(get_db)):
-    batches = db.query(Batch).filter(Batch.status == "ACTIVE", Batch.stage.in_(("PROCESSED", "AT_RETAILER"))).all()
+    batches = db.query(Batch).filter(
+        Batch.status.in_(("ACTIVE", "SPLIT")),
+        Batch.stage.in_(("IN_TRANSIT_TO_RETAIL", "AT_RETAILER", "AT_COLLECTION_CENTRE", "PROCESSED"))
+    ).order_by(Batch.created_at.desc()).all()
     orders = db.query(ProcurementOrder).order_by(ProcurementOrder.created_at.desc()).all()
     inventory = db.query(RetailerInventory).order_by(RetailerInventory.created_at.desc()).all()
 
@@ -733,6 +736,7 @@ def get_retailer_dashboard(db: Session = Depends(get_db)):
             "procurement_orders": len(orders),
             "active_retail_stock_items": len(inventory),
             "total_stock_kg": sum(inv.available_quantity for inv in inventory),
+            "qrs_minted": len([inv for inv in inventory if inv.opaque_qr_token]),
         },
         "available_batches": [
             {
@@ -742,7 +746,11 @@ def get_retailer_dashboard(db: Session = Depends(get_db)):
                 "quantity": b.current_quantity,
                 "unit": b.unit,
                 "grade": b.quality_grade or "GRADE_A",
+                "quality_grade": b.quality_grade or "GRADE_A",
                 "stage": b.stage,
+                "status": "DISPATCHED" if b.stage == "IN_TRANSIT_TO_RETAIL" else "HUB_VERIFIED",
+                "origin": f"{b.farm.cluster_name if b.farm and b.farm.cluster_name else 'Adilabad Regional Hub'}",
+                "eligible_for_qr": True,
             }
             for b in batches
         ],

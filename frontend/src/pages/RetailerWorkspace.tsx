@@ -87,7 +87,7 @@ export const RetailerWorkspace: React.FC = () => {
   const [qrUnitWeight, setQrUnitWeight] = useState('0.5');
   const [qrQuantity, setQrQuantity] = useState(24);
   const [qrLabelSize, setQrLabelSize] = useState<'2x1' | '3x2' | '4x3'>('3x2');
-  const [qrScanTarget, setQrScanTarget] = useState<'png' | 'verify'>('png');
+  const [qrScanTarget, setQrScanTarget] = useState<'png' | 'verify'>('verify');
   const [mintingQr, setMintingQr] = useState(false);
   const [generatedQrResult, setGeneratedQrResult] = useState<any>(null);
   const [showPrintSheet, setShowPrintSheet] = useState(false);
@@ -101,17 +101,7 @@ export const RetailerWorkspace: React.FC = () => {
     labelSize: string;
     token: string;
     timestamp: string;
-  }>>([
-    {
-      id: 'qr-hist-1',
-      batchCode: 'BATCH-2026-001',
-      sku: 'SKU-PRM-COTTON-500G',
-      quantity: 48,
-      labelSize: '3x2',
-      token: 'prm_3152005f74824af1b6b4715603f8b302',
-      timestamp: new Date(Date.now() - 86400000).toLocaleString(),
-    },
-  ]);
+  }>>([]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -122,6 +112,22 @@ export const RetailerWorkspace: React.FC = () => {
         if (!selectedBatch) setSelectedBatch(res.available_batches[0]);
         if (!receiptBatchId) setReceiptBatchId(res.available_batches[0].id);
         if (!qrBatchId) setQrBatchId(res.available_batches[0].id);
+      }
+      if (res.inventory && res.inventory.length > 0) {
+        const minted = res.inventory
+          .filter((inv: any) => inv.opaque_qr_token)
+          .map((inv: any) => ({
+            id: inv.id,
+            batchCode: inv.batch_code,
+            sku: inv.sku || `SKU-PRM-${inv.crop_type}-500G`,
+            quantity: 24,
+            labelSize: '3x2',
+            token: inv.opaque_qr_token,
+            timestamp: inv.created_at ? new Date(inv.created_at).toLocaleString() : new Date().toLocaleString(),
+          }));
+        if (minted.length > 0) {
+          setQrHistory(minted);
+        }
       }
     } catch (err: any) {
       console.error('Failed to load retailer dashboard:', err);
@@ -134,65 +140,8 @@ export const RetailerWorkspace: React.FC = () => {
     fetchData();
   }, []);
 
-  const availableBatches: any[] = data?.available_batches || [
-    {
-      id: 'batch_cotton_001',
-      batch_code: 'BATCH-2026-001',
-      crop_type: 'Shankar-6 Cotton',
-      quality_grade: 'GRADE_A',
-      quantity: 500.0,
-      stage: 'AT_RETAILER',
-      status: 'VERIFIED',
-      eligible_for_qr: true,
-      origin: 'Green Valley FPO, Adilabad',
-    },
-    {
-      id: 'batch_turmeric_002',
-      batch_code: 'BATCH-2026-002',
-      crop_type: 'Nizamabad Turmeric',
-      quality_grade: 'GRADE_A',
-      quantity: 350.0,
-      stage: 'IN_TRANSIT',
-      status: 'VERIFIED',
-      eligible_for_qr: true,
-      origin: 'Telangana Spices Cluster',
-    },
-    {
-      id: 'batch_chilli_003',
-      batch_code: 'BATCH-2026-003',
-      crop_type: 'Guntur Teja Chilli',
-      quality_grade: 'GRADE_B',
-      quantity: 120.0,
-      stage: 'COLLECTION_HUB',
-      status: 'PENDING_INSPECTION',
-      eligible_for_qr: false,
-      ineligible_reason: 'Pending collection centre lab moisture test & quality certificate approval.',
-      origin: 'Andhra Organic Cooperative',
-    },
-  ];
-
-  const inventory: any[] = data?.inventory || [
-    {
-      id: 'inv-1',
-      sku: 'SKU-PRM-COTTON-500G',
-      batch_code: 'BATCH-2026-001',
-      storage_location: 'Aisle 4, Shelf Bay B',
-      units_available: 380,
-      unit_weight_kg: '0.5',
-      price_inr: 120.0,
-      status: 'READY_FOR_SALE',
-    },
-    {
-      id: 'inv-2',
-      sku: 'SKU-ORG-TURMERIC-250G',
-      batch_code: 'BATCH-2026-002',
-      storage_location: 'Organic Spices Shelf 2',
-      units_available: 240,
-      unit_weight_kg: '0.25',
-      price_inr: 85.0,
-      status: 'READY_FOR_SALE',
-    },
-  ];
+  const availableBatches: any[] = data?.available_batches || [];
+  const inventory: any[] = data?.inventory || [];
 
   // ---------------------------------------------------------------------------
   // 5-STEP RETAILER RECEIPT WORKFLOW HANDLER
@@ -469,7 +418,7 @@ export const RetailerWorkspace: React.FC = () => {
         />
         <StatMetric
           label="Consumer QRs Minted"
-          value={qrHistory.reduce((acc, curr) => acc + curr.quantity, 1280)}
+          value={qrHistory.reduce((acc, curr) => acc + curr.quantity, 0)}
           subValue="Cryptographically anchored"
           icon={QrCode}
           variant="info"
@@ -1267,7 +1216,7 @@ export const RetailerWorkspace: React.FC = () => {
 
                     {/* Active QR Token */}
                     {(() => {
-                      const activeToken = generatedQrResult?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302';
+                      const activeToken = generatedQrResult?.opaque_qr_token || qrHistory[0]?.token || inventory.find((i) => i.opaque_qr_token)?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302';
                       return (
                         <>
                           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
@@ -1369,7 +1318,8 @@ export const RetailerWorkspace: React.FC = () => {
 
                   {/* Actions after minting or direct sheet view */}
                   {(() => {
-                    const activeToken = generatedQrResult?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302';
+                    const activeToken =
+                      generatedQrResult?.opaque_qr_token || qrHistory[0]?.token || inventory.find((i) => i.opaque_qr_token)?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302';
                     return (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '16px', justifyContent: 'center' }}>
                         <a
@@ -1563,7 +1513,7 @@ export const RetailerWorkspace: React.FC = () => {
           <PrintableLabelSheet
             batchCode={currentQrBatch?.batch_code || 'BATCH-2026-001'}
             cropType={currentQrBatch?.crop_type || 'Shankar-6 Cotton'}
-            qrToken={generatedQrResult?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302'}
+            qrToken={generatedQrResult?.opaque_qr_token || qrHistory[0]?.token || inventory.find((i) => i.opaque_qr_token)?.opaque_qr_token || 'prm_3152005f74824af1b6b4715603f8b302'}
             sku={qrSku}
             packageWeight={`${qrUnitWeight} KG`}
             labelSize={qrLabelSize}
