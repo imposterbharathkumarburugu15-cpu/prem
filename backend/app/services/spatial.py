@@ -6,6 +6,7 @@ and farmer declared area reconciliation.
 
 from typing import List, Tuple, Dict, Any, Union, Optional
 import math
+from datetime import datetime, timezone
 
 
 # WGS84 Reference Ellipsoid Constants (EPSG:4326)
@@ -53,7 +54,7 @@ def is_valid_wgs84(lat: float, lon: float, accuracy: Optional[float] = None) -> 
     if accuracy is not None:
         if not isinstance(accuracy, (int, float)) or math.isnan(accuracy) or math.isinf(accuracy):
             return False
-        if accuracy <= 0.0 or accuracy > 500.0:
+        if accuracy <= 0.0 or accuracy > 100.0:
             return False
     return True
 
@@ -110,7 +111,7 @@ def validate_farm_polygon(
                 try:
                     acc_f = float(acc)
                     if not is_valid_wgs84(float(lat), float(lon), accuracy=acc_f):
-                        return False, f"Invalid horizontal accuracy at vertex {idx}: {acc_f}m (must be > 0.0 and <= 500.0m)"
+                        return False, f"Invalid horizontal accuracy at vertex {idx}: {acc_f}m (must be > 0.0 and <= 100.0m)"
                 except (ValueError, TypeError):
                     return False, f"Invalid horizontal accuracy format at vertex {idx}"
             raw_coords.append((float(lat), float(lon)))
@@ -124,7 +125,7 @@ def validate_farm_polygon(
                 try:
                     acc_f = float(acc)
                     if not is_valid_wgs84(float(lat), float(lon), accuracy=acc_f):
-                        return False, f"Invalid horizontal accuracy at vertex {idx}: {acc_f}m (must be > 0.0 and <= 500.0m)"
+                        return False, f"Invalid horizontal accuracy at vertex {idx}: {acc_f}m (must be > 0.0 and <= 100.0m)"
                 except (ValueError, TypeError):
                     return False, f"Invalid horizontal accuracy format at vertex {idx}"
             raw_coords.append((float(lat), float(lon)))
@@ -327,3 +328,181 @@ def validate_declared_area(
     }
 
     return is_within_tolerance, status_msg, details
+
+
+def haversine_distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Computes great-circle geodesic distance between two WGS84 points in metres."""
+    r = 6371000.0  # Earth mean radius in metres
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(delta_phi / 2.0) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0) ** 2
+    )
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(max(0.0, 1.0 - a)))
+    return float(r * c)
+
+
+def point_in_polygon(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
+    """Ray-casting algorithm to test whether point (lat, lon) is inside a polygon."""
+    if not polygon or len(polygon) < 3:
+        return False
+    lat, lon = point
+    n = len(polygon)
+    inside = False
+
+    p1_lat, p1_lon = polygon[0]
+    for i in range(1, n + 1):
+        p2_lat, p2_lon = polygon[i % n]
+        if lon > min(p1_lon, p2_lon):
+            if lon <= max(p1_lon, p2_lon):
+                if lat <= max(p1_lat, p2_lat):
+                    if p1_lon != p2_lon:
+                        lat_inters = (lon - p1_lon) * (p2_lat - p1_lat) / (p2_lon - p1_lon) + p1_lat
+                    else:
+                        lat_inters = p1_lat
+                    if p1_lat == p2_lat or lat <= lat_inters:
+                        inside = not inside
+        p1_lat, p1_lon = p2_lat, p2_lon
+
+    return inside
+
+
+def evaluate_altitude_plausibility(
+    altitude: Optional[float],
+    min_altitude: float = -100.0,
+    max_altitude: float = 5000.0,
+) -> Dict[str, Any]:
+    """Validates altitude plausibility for agricultural evidence."""
+    if altitude is None:
+        return {"is_valid": True, "altitude": None, "note": "Altitude not recorded"}
+    if not isinstance(altitude, (int, float)) or math.isnan(altitude) or math.isinf(altitude):
+        return {"is_valid": False, "altitude": altitude, "note": "Non-finite altitude"}
+    if altitude < min_altitude or altitude > max_altitude:
+        return {
+            "is_valid": False,
+            "altitude": float(altitude),
+            "note": f"Altitude {altitude}m out of terrestrial bounds [{min_altitude}m, {max_altitude}m]",
+        }
+    return {"is_valid": True, "altitude": float(altitude), "note": "Plausible altitude"}
+
+
+def _parse_timestamp_seconds(val: Any) -> float:
+    """Extracts timestamp as epoch seconds from ISO string, datetime, or number."""
+    if isinstance(val, (int, float)):
+        # If timestamp is in milliseconds (> 10^11), convert to seconds
+        return float(val / 1000.0) if val > 1e11 else float(val)
+    if isinstance(val, datetime):
+        return val.timestamp()
+    if isinstance(val, str):
+        try:
+            return datetime.fromisoformat(val.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return float(val)
+    raise ValueError(f"Cannot parse timestamp from: {val}")
+
+
+def validate_kinematic_transition(
+    prev_coord: Dict[str, Any],
+    curr_coord: Dict[str, Any],
+    max_velocity_mps: float = 50.0,
+) -> Dict[str, Any]:
+    """Evaluates kinematic velocity, jump/teleportation, and altitude plausibility
+    between sequential device location observations.
+    
+    Detects:
+    - Zero time displacement (delta_t == 0 and distance > 10m -> teleportation)
+    - Excessive velocity (> max_velocity_mps, default 50.0 m/s ~ 180 km/h)
+    - Altitude out-of-bounds ([-100.0m, 5000.0m])
+    """
+    lat1 = float(prev_coord.get("latitude") if "latitude" in prev_coord else prev_coord["lat"])
+    lon1 = float(prev_coord.get("longitude") if "longitude" in prev_coord else prev_coord["lon"])
+    lat2 = float(curr_coord.get("latitude") if "latitude" in curr_coord else curr_coord["lat"])
+    lon2 = float(curr_coord.get("longitude") if "longitude" in curr_coord else curr_coord["lon"])
+
+    t1_raw = prev_coord.get("timestamp") or prev_coord.get("capture_timestamp") or prev_coord.get("time") or 0.0
+    t2_raw = curr_coord.get("timestamp") or curr_coord.get("capture_timestamp") or curr_coord.get("time") or 0.0
+
+    t1_sec = _parse_timestamp_seconds(t1_raw)
+    t2_sec = _parse_timestamp_seconds(t2_raw)
+
+    delta_t = abs(t2_sec - t1_sec)
+    distance_m = haversine_distance_m(lat1, lon1, lat2, lon2)
+
+    # Altitude check
+    curr_alt = curr_coord.get("altitude") or curr_coord.get("alt") or curr_coord.get("elevation")
+    alt_eval = evaluate_altitude_plausibility(float(curr_alt) if curr_alt is not None else None)
+
+    if delta_t == 0.0:
+        if distance_m > 10.0:
+            return {
+                "is_valid": False,
+                "is_anomalous": True,
+                "is_teleportation": True,
+                "distance_meters": round(distance_m, 2),
+                "delta_seconds": 0.0,
+                "velocity_mps": float("inf"),
+                "velocity_kmh": float("inf"),
+                "altitude_plausibility": alt_eval,
+                "reason": f"Displacement of {round(distance_m, 1)}m with zero elapsed time (teleportation)",
+            }
+        return {
+            "is_valid": alt_eval["is_valid"],
+            "is_anomalous": not alt_eval["is_valid"],
+            "is_teleportation": False,
+            "distance_meters": round(distance_m, 2),
+            "delta_seconds": 0.0,
+            "velocity_mps": 0.0,
+            "velocity_kmh": 0.0,
+            "altitude_plausibility": alt_eval,
+            "reason": "Stationary identical observation",
+        }
+
+    velocity_mps = distance_m / delta_t
+    is_speed_anomaly = velocity_mps > max_velocity_mps
+    is_teleportation = is_speed_anomaly and distance_m > 50000.0
+
+    is_anomalous = is_speed_anomaly or not alt_eval["is_valid"]
+    reason = (
+        f"Velocity {round(velocity_mps * 3.6, 1)} km/h exceeds maximum threshold {round(max_velocity_mps * 3.6, 1)} km/h"
+        if is_speed_anomaly
+        else (alt_eval["note"] if not alt_eval["is_valid"] else "Normal kinematic motion")
+    )
+
+    return {
+        "is_valid": not is_anomalous,
+        "is_anomalous": is_anomalous,
+        "is_teleportation": is_teleportation,
+        "distance_meters": round(distance_m, 2),
+        "delta_seconds": round(delta_t, 2),
+        "velocity_mps": round(velocity_mps, 2),
+        "velocity_kmh": round(velocity_mps * 3.6, 2),
+        "altitude_plausibility": alt_eval,
+        "reason": reason,
+    }
+
+
+evaluate_kinematic_transition = validate_kinematic_transition
+
+
+def check_mock_location(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """Detects Android mock location and provider flags in device metadata."""
+    flags = []
+    if metadata.get("is_mock") is True or metadata.get("isMock") is True:
+        flags.append("IS_MOCK_FLAG_SET")
+    if metadata.get("mock_provider") is True or metadata.get("is_from_mock_provider") is True:
+        flags.append("MOCK_PROVIDER_INDICATED")
+    if str(metadata.get("provider", "")).lower() == "mock":
+        flags.append("PROVIDER_NAME_MOCK")
+    if metadata.get("mock_location") is True:
+        flags.append("MOCK_LOCATION_FLAG")
+
+    is_mock = len(flags) > 0
+    return {
+        "is_mock_detected": is_mock,
+        "flags": flags,
+        "reason": f"Mock location detected via flags: {', '.join(flags)}" if is_mock else "Genuine sensor hardware reported",
+    }
+

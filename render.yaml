@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: praman-backend
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: .
+    buildCommand: "./build.sh"
+    startCommand: "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
+      - key: PYTHONPATH
+        value: .
+      - key: DATABASE_URL
+        fromDatabase:
+          name: praman-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: STORAGE_DIR
+        value: data/evidence
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      - key: PORT
+        value: 10000
+
+databases:
+  - name: praman-db
+    databaseName: praman
+    user: postgres
+    plan: free
+    region: oregon

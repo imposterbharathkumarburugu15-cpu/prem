@@ -1,0 +1,34 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# PyTorch & Torchvision (CPU-only builds to fit free/starter tier memory and disk)
+torch>=2.2.0,<3.0.0
+torchvision>=0.17.0,<1.0.0
+
+# FastAPI Core & ASGI Server
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0,<1.0.0
+python-multipart>=0.0.9
+
+# Pydantic & Settings
+pydantic>=2.6.0,<3.0.0
+pydantic-settings>=2.2.0,<3.0.0
+
+# Database & ORM
+sqlalchemy>=2.0.28,<3.0.0
+alembic>=1.13.0,<2.0.0
+psycopg[binary]>=3.1.18,<4.0.0
+psycopg2-binary>=2.9.9
+
+# Cryptography & Canonicalization
+cryptography>=42.0.0
+rfc8785>=0.1.2
+pyjwt>=2.8.0,<3.0.0
+
+# Computer Vision & Machine Learning
+pillow>=10.2.0
+opencv-python-headless>=4.9.0.80
+numpy>=1.26.0,<3.0.0
+scikit-learn>=1.4.0
+
+# Utilities
+qrcode>=7.4.2

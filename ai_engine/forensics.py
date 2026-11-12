@@ -37,7 +37,7 @@ class ImageForensicsAnalyzer:
         """
         gray = np.array(image.convert("L"), dtype=np.float32)
         h, w = gray.shape
-        if h < 32 or w < 32:
+        if h < 32 or w < 32 or np.var(gray) < 1.0:
             return 1.0, False
 
         f = np.fft.fft2(gray)
@@ -74,7 +74,7 @@ class ImageForensicsAnalyzer:
                 return Image.fromarray(image_input).convert("RGB")
             return Image.fromarray(image_input).convert("RGB")
         elif isinstance(image_input, Image.Image):
-            return image_input.convert("RGB")
+            return image_input if image_input.mode == "RGB" else image_input.convert("RGB")
         else:
             raise TypeError(f"Unsupported image input type: {type(image_input)}")
 
@@ -149,9 +149,55 @@ class ImageForensicsAnalyzer:
         # 3. Frequency Domain AI Generation Artifacts
         spectral_ratio, is_spectral_anomalous = self.compute_spectral_artifacts(image)
 
-        # EXIF presence check – real camera images contain EXIF metadata. If present, we treat the image as genuine
-        # and do not flag it as AI‑generated, even if other heuristics fire.
-        has_exif = bool(image.getexif())
+        # EXIF inspection: check for genuine camera hardware tags vs AI generation software signatures
+        exif_tags = {}
+        raw_pil = None
+        if isinstance(image_input, bytes):
+            try:
+                raw_pil = Image.open(io.BytesIO(image_input))
+                exif_data = raw_pil.getexif()
+                if exif_data:
+                    exif_tags = {k: str(v) for k, v in exif_data.items()}
+            except Exception:
+                pass
+        elif hasattr(image_input, "getexif"):
+            try:
+                exif_data = image_input.getexif()
+                if exif_data:
+                    exif_tags = {k: str(v) for k, v in exif_data.items()}
+            except Exception:
+                pass
+
+        if not exif_tags and hasattr(image, "getexif"):
+            try:
+                exif_data = image.getexif()
+                if exif_data:
+                    exif_tags = {k: str(v) for k, v in exif_data.items()}
+            except Exception:
+                pass
+
+        exif_str = " ".join(exif_tags.values()).lower()
+        ai_signatures = [
+            "stable diffusion",
+            "midjourney",
+            "dall-e",
+            "dalle",
+            "firefly",
+            "civitai",
+            "novelai",
+            "flux.1",
+            "flux",
+            "synthetic",
+            "ai generated",
+            "ai_generated",
+            "comfyui",
+            "automatic1111",
+            "leonardo.ai",
+        ]
+        is_ai_software_tagged = any(sig in exif_str for sig in ai_signatures)
+
+        # Genuine hardware camera tags: 271 (Make), 272 (Model), 306 (DateTime), 36867 (DateTimeOriginal), 33434 (ExposureTime), 33437 (FNumber)
+        has_camera_hardware_exif = any(k in exif_tags for k in (271, 272, 306, 36867, 33434, 33437))
 
         # 4. Anomaly Evaluation
         is_ela_anomalous = ela_variance > self.ela_variance_threshold
@@ -159,13 +205,17 @@ class ImageForensicsAnalyzer:
             noise_variance > self.noise_variance_threshold
             or noise_disparity > self.noise_disparity_threshold
         )
-        # AI generation generates severe inter-patch noise disparity (e.g. smooth gradient sky vs textured crop foreground)
-        # and abnormal Fourier spectral distribution
-        is_ai_generated_suspected = (
-            is_spectral_anomalous
-            or (not has_exif and noise_disparity > self.noise_disparity_threshold)
-            or (noise_variance < 0.5 and noise_disparity > 4.0)
+
+        # AI generation detection:
+        # Fired ONLY if explicitly watermarked/tagged with AI generator software,
+        # OR exhibits severe 2D Fourier periodic upsampling grid artifacts combined with synthetic near-zero sensor noise
+        is_ai_generated_suspected = is_ai_software_tagged or (
+            not has_camera_hardware_exif
+            and is_spectral_anomalous
+            and noise_variance < 0.5
         )
+
+        # Tampering detection: Error Level Analysis variance, noise disparity between spliced patches, or synthetic injection
         is_tamper_suspected = is_ela_anomalous or is_noise_anomalous or is_ai_generated_suspected
 
         return {

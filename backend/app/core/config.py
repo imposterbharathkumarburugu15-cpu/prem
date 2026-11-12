@@ -2,7 +2,19 @@ import os
 from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic import ConfigDict, field_validator
+
+
+def _get_default_database_url() -> str:
+    raw = os.getenv(
+        "DATABASE_URL",
+        f"postgresql+psycopg://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_SERVER', 'localhost')}:{os.getenv('POSTGRES_PORT', '1234')}/{os.getenv('POSTGRES_DB', 'praman')}",
+    )
+    if raw.startswith("postgres://"):
+        return raw.replace("postgres://", "postgresql+psycopg://", 1)
+    if raw.startswith("postgresql://") and not raw.startswith("postgresql+"):
+        return raw.replace("postgresql://", "postgresql+psycopg://", 1)
+    return raw
 
 
 class Settings(BaseSettings):
@@ -19,10 +31,17 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "praman")
 
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        f"postgresql+psycopg://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'postgres')}@{os.getenv('POSTGRES_SERVER', 'localhost')}:{os.getenv('POSTGRES_PORT', '1234')}/{os.getenv('POSTGRES_DB', 'praman')}",
-    )
+    DATABASE_URL: str = _get_default_database_url()
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+psycopg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
+                return v.replace("postgresql://", "postgresql+psycopg://", 1)
+        return v
 
     # Content-addressable storage root directory
     STORAGE_DIR: str = os.getenv(

@@ -29,6 +29,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import android.os.Handler;
+import android.os.Looper;
 
 import org.json.JSONObject;
 import org.praman.farmer.connectivity.NativeConnectivityBridge;
@@ -141,8 +143,10 @@ public class MainActivity extends AppCompatActivity {
         // Request runtime permissions on startup
         requestNecessaryPermissions();
 
-        // Load local app
-        webView.loadUrl("file:///android_asset/index.html");
+        // Load local app after a short delay to extend splash screen display time
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            webView.loadUrl("file:///android_asset/index.html");
+        }, 2000);
     }
 
     private void requestNecessaryPermissions() {

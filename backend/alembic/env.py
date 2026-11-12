@@ -23,7 +23,21 @@ from backend.app.models import (
     AIAssessment,
     ReviewDecision,
     MerkleBatch,
+    MerkleEpoch,
+    ActorTrust,
+    TrustEvent,
     PublicToken,
+    Organization,
+    User,
+    Batch,
+    WeighingRecord,
+    Shipment,
+    ShipmentItem,
+    ShipmentEvent,
+    RetailerInventory,
+    QualityInspection,
+    ProcurementOrder,
+    ChallengeResponse,
 )
 
 config = context.config
@@ -35,6 +49,10 @@ target_metadata = Base.metadata
 
 
 def get_url():
+    # If a custom sqlalchemy.url was passed in config, respect it (e.g. for tests/sqlite)
+    custom_url = config.get_main_option("sqlalchemy.url")
+    if custom_url:
+        return custom_url
     return settings.DATABASE_URL
 
 

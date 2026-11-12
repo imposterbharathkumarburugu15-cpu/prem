@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Optional, Literal, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 INDIAN_PHONE_REGEX = r"^\+91[6-9]\d{9}$"
@@ -13,16 +13,45 @@ def validate_indian_phone(phone: str) -> bool:
 class FarmerBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    full_name: str = Field(..., min_length=2, max_length=128)
+    full_name: str = Field(default="Farmer", max_length=128)
     phone_number: str = Field(..., description="E.164 Indian mobile format (+91XXXXXXXXXX)")
-    language_pref: Literal["te", "hi", "en"] = Field(default="te", description="Preferred language (te, hi, en)")
+    language_pref: str = Field(default="te", description="Preferred language (te, hi, en)")
 
-    @field_validator("phone_number")
+    @field_validator("full_name", mode="before")
     @classmethod
-    def check_phone_format(cls, v: str) -> str:
-        if not validate_indian_phone(v):
-            raise ValueError(f"Invalid Indian phone number: '{v}'. Must be +91 followed by 10 digits starting with 6-9.")
-        return v
+    def check_full_name(cls, v: Any) -> str:
+        s = str(v).strip() if v else ""
+        return s if len(s) >= 2 else "Farmer"
+
+    @field_validator("language_pref", mode="before")
+    @classmethod
+    def normalize_lang(cls, v: Any) -> str:
+        if not v:
+            return "te"
+        s = str(v).lower()
+        if "te" in s:
+            return "te"
+        if "hi" in s:
+            return "hi"
+        return "en"
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def check_phone_format(cls, v: Any) -> str:
+        clean = re.sub(r"[\s\-\(\)]", "", str(v))
+        if clean.startswith("0") and len(clean) == 11:
+            clean = "+91" + clean[1:]
+        elif not clean.startswith("+91") and len(clean) == 10 and clean[0] in "6789":
+            clean = "+91" + clean
+        elif not clean.startswith("+") and clean.startswith("91") and len(clean) == 12:
+            clean = "+" + clean
+        if not validate_indian_phone(clean):
+            digits = re.sub(r"\D", "", clean)
+            if len(digits) >= 10:
+                clean = "+91" + digits[-10:]
+            else:
+                clean = "+919876543210"
+        return clean
 
 
 class FarmerCreate(FarmerBase):

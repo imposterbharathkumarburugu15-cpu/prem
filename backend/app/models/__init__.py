@@ -8,6 +8,8 @@ from backend.app.models.audit_log import AuditLog
 from backend.app.models.ai_assessment import AIAssessment
 from backend.app.models.review_decision import ReviewDecision
 from backend.app.models.merkle_batch import MerkleBatch
+from backend.app.models.merkle_epoch import MerkleEpoch
+from backend.app.models.trust import ActorTrust, TrustEvent
 from backend.app.models.public_token import PublicToken, generate_public_token
 from backend.app.models.user_org import Organization, User
 from backend.app.models.supply_chain import (
@@ -20,6 +22,7 @@ from backend.app.models.supply_chain import (
     ProcurementOrder,
     RetailerInventory,
     ChallengeResponse,
+    BusinessEvent,
 )
 
 __all__ = [
@@ -33,6 +36,9 @@ __all__ = [
     "AIAssessment",
     "ReviewDecision",
     "MerkleBatch",
+    "MerkleEpoch",
+    "ActorTrust",
+    "TrustEvent",
     "PublicToken",
     "generate_public_token",
     "Organization",
@@ -46,4 +52,5 @@ __all__ = [
     "ProcurementOrder",
     "RetailerInventory",
     "ChallengeResponse",
+    "BusinessEvent",
 ]

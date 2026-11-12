@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import Column, String, DateTime, CheckConstraint, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 from backend.app.core.database import Base
 
 
@@ -18,6 +18,10 @@ class Farmer(Base):
     )
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
+    name = synonym("full_name")
+    phone = synonym("phone_number")
+
     devices = relationship("Device", back_populates="farmer", cascade="all, delete-orphan")
     farms = relationship("Farm", back_populates="farmer", cascade="all, delete-orphan")
+
 

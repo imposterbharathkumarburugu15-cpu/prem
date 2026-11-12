@@ -15,6 +15,10 @@ def assess_upload_legitimacy(
     """
     capture_dt = datetime.fromisoformat(capture_timestamp_iso.replace("Z", "+00:00"))
     server_dt = datetime.fromisoformat(server_timestamp_iso.replace("Z", "+00:00"))
+    if capture_dt.tzinfo is None:
+        capture_dt = capture_dt.replace(tzinfo=timezone.utc)
+    if server_dt.tzinfo is None:
+        server_dt = server_dt.replace(tzinfo=timezone.utc)
 
     delay_seconds = (server_dt - capture_dt).total_seconds()
     

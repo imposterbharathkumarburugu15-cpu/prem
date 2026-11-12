@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text, func
 from sqlalchemy.orm import relationship
 from backend.app.core.database import Base
@@ -42,6 +42,7 @@ class Batch(Base):
     inspections = relationship("QualityInspection", back_populates="batch")
     weighing_records = relationship("WeighingRecord", back_populates="batch")
     inventory_items = relationship("RetailerInventory", back_populates="batch")
+    business_events = relationship("BusinessEvent", back_populates="batch", cascade="all, delete-orphan")
 
 
 class Shipment(Base):
@@ -70,6 +71,7 @@ class Shipment(Base):
     transporter_org = relationship("Organization", foreign_keys=[transporter_org_id], back_populates="shipments_as_transporter")
     items = relationship("ShipmentItem", back_populates="shipment", cascade="all, delete-orphan")
     events = relationship("ShipmentEvent", back_populates="shipment", cascade="all, delete-orphan")
+    business_events = relationship("BusinessEvent", back_populates="shipment", cascade="all, delete-orphan")
 
 
 class ShipmentItem(Base):
@@ -194,4 +196,32 @@ class ChallengeResponse(Base):
     response_evidence_id = Column(String, ForeignKey("evidence.id"), nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     responded_at = Column(DateTime, nullable=True)
+
+
+class BusinessEvent(Base):
+    __tablename__ = "business_events"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_type = Column(String, nullable=False, index=True)
+    batch_id = Column(String, ForeignKey("batches.id"), nullable=True, index=True)
+    shipment_id = Column(String, ForeignKey("shipments.id"), nullable=True, index=True)
+    farm_id = Column(String, ForeignKey("farms.id"), nullable=True, index=True)
+    organization_id = Column(String, ForeignKey("organizations.id"), nullable=True, index=True)
+    actor_id = Column(String, nullable=False, index=True)
+    actor_role = Column(String, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True, default=lambda: datetime.now(timezone.utc))
+    payload_json = Column(Text, nullable=False, default="{}")
+    metadata_json = Column(Text, nullable=False, default="{}")
+    evidence_id = Column(String, ForeignKey("evidence.id"), nullable=True, index=True)
+    evidence_hash = Column(String(64), nullable=True, index=True)
+    verification_status = Column(String, nullable=False, default="VERIFIED")  # VERIFIED, FLAGGED, PENDING, FAILED
+    verification_details_json = Column(Text, nullable=True, default="{}")
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    batch = relationship("Batch", back_populates="business_events")
+    shipment = relationship("Shipment", back_populates="business_events")
+    farm = relationship("Farm")
+    organization = relationship("Organization")
+    evidence = relationship("Evidence")
+
 

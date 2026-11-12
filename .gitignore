@@ -59,6 +59,11 @@ pytest_*.log
 *.sqlite
 *.sqlite3
 data/evidence/
+data/storage/
+
+# Static UI distribution assets (ensure pre-compiled web console assets are tracked)
+!web_console/static/
+!web_console/static/**
 
 # Node & Frontend dependencies
 node_modules/

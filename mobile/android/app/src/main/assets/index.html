@@ -3199,7 +3199,8 @@
           const isFlagged = isDup || isTampered || isAiGen;
 
           let badgeLabel = 'DUPLICATE MATCH';
-          if (isAiGen) badgeLabel = 'AI GENERATION SUSPECTED';
+          if (isAiGen && isDup) badgeLabel = 'AI GENERATION & DUPLICATE DETECTED';
+          else if (isAiGen) badgeLabel = 'AI GENERATION SUSPECTED';
           else if (isTampered) badgeLabel = 'TAMPER ANOMALY';
           else if (isDup) badgeLabel = (receipt && receipt.classification) || 'DUPLICATE MATCH';
 

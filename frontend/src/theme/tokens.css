@@ -1,0 +1,232 @@
+/* ==========================================================================
+   PRAMAN ENTERPRISE DESIGN SYSTEM — SECTION 21.1 VISUAL IDENTITY
+   Adversarial Evidence-Security & Tamper-Evident Provenance Platform
+   Palette: Deep Forest Green (#1B4332), Muted Sage (#40916C), Warm Off-White (#FBFBF9)
+   ========================================================================== */
+
+:root {
+  /* Brand & Core Surfaces (Warm Agricultural Modernism) */
+  --bg-primary: #FBFBF9;
+  --bg-subtle: #F4F4F0;
+  --bg-hover: #ECECE6;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-inset: #F8F9FA;
+
+  /* Typography Colors */
+  --text-primary: #111827;      /* Deep charcoal */
+  --text-secondary: #64748B;    /* Slate grey */
+  --text-tertiary: #94A3B8;     /* Muted neutral */
+  --text-inverse: #FFFFFF;
+  --text-disabled: #CBD5E1;
+
+  /* Primary Forest Green (Core Trust, Stewardship & Security) */
+  --forest-950: #081C15;
+  --forest-900: #1B4332;       /* Primary Accent */
+  --forest-800: #2D6A4F;       /* Deep Muted Green */
+  --forest-700: #40916C;       /* Secondary Accent Sage */
+  --forest-600: #52B788;
+  --forest-500: #74C69D;
+  --forest-100: #D8F3DC;
+  --forest-50: #EBF8EE;
+
+  /* Backward-compatible alias mapping to Forest palette */
+  --navy-950: #081C15;
+  --navy-900: #1B4332;
+  --navy-800: #2D6A4F;
+  --navy-700: #40916C;
+  --navy-600: #52B788;
+  --navy-100: #D8F3DC;
+  --navy-50: #F4FBF6;
+
+  /* Emerald & Sage Status Accents */
+  --emerald-700: #1B4332;
+  --emerald-600: #2D6A4F;
+  --emerald-500: #40916C;
+  --emerald-100: #D8F3DC;
+  --emerald-50: #EBF8EE;
+
+  /* Restrained Amber (Controlled Operational Alerts) */
+  --warning-700: #92400E;
+  --warning-600: #B45309;
+  --warning-500: #D97706;
+  --warning-50: #FFFBEB;
+  --warning-border: #FDE68A;
+
+  /* Controlled Red (Tamper & Discrepancy Warnings) */
+  --critical-700: #991B1B;
+  --critical-600: #B91C1C;
+  --critical-500: #DC2626;
+  --critical-50: #FEF2F2;
+  --critical-border: #FECACA;
+
+  /* Technical Info Blue */
+  --info-700: #0369A1;
+  --info-600: #0284C7;
+  --info-50: #F0F9FF;
+  --info-border: #BAE6FD;
+
+  /* Subtle Enterprise Borders & Dividers */
+  --border-subtle: #F0F0EB;
+  --border-default: #E5E7EB;
+  --border-strong: #D1D5DB;
+  --border-active: #1B4332;
+
+  /* Refined Elevation Shadows */
+  --shadow-xs: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.07), 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.07), 0 2px 4px -1px rgba(17, 24, 39, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.08), 0 4px 6px -2px rgba(17, 24, 39, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(17, 24, 39, 0.08), 0 10px 10px -5px rgba(17, 24, 39, 0.03);
+  --shadow-drawer: -12px 0 32px rgba(17, 24, 39, 0.12);
+
+  /* Fluid Typography Tokens */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  --text-fluid-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --text-fluid-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.875rem);
+  --text-fluid-base: clamp(0.875rem, 0.84rem + 0.25vw, 1rem);
+  --text-fluid-lg: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  --text-fluid-xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  --text-fluid-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+
+  /* Geometry & Layout */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Dimensions */
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height: 64px;
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* CSS Reset & Defaults */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography Helpers with fluid scaling */
+h1 {
+  font-size: var(--text-fluid-2xl);
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: var(--text-fluid-xl);
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: var(--text-fluid-lg);
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Common Utility Classes */
+.mono-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Print utility for QR sheets */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

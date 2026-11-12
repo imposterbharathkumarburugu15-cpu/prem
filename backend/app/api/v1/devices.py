@@ -35,13 +35,20 @@ def register_device(
         )
     key_pem = key_pem.strip()
 
-    # 1. Verify farmer exists
-    farmer = db.query(Farmer).filter(Farmer.id == payload.farmer_id).first()
+    # 1. Verify farmer exists or auto-provision
+    farmer_id = payload.farmer_id or f"farmer_{uuid.uuid4().hex[:8]}"
+    farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
     if not farmer:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Farmer {payload.farmer_id} not found",
+        clean_phone = f"+9198{str(abs(hash(str(farmer_id))))[:8]}"
+        farmer = Farmer(
+            id=str(farmer_id),
+            full_name="Registered Mobile Farmer",
+            phone_number=clean_phone,
+            language_pref="te",
         )
+        db.add(farmer)
+        db.commit()
+        db.refresh(farmer)
 
     device_id = payload.device_id or payload.id or str(uuid.uuid4())
 

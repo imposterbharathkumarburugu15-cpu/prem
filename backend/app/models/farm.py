@@ -11,7 +11,7 @@ class Farm(Base):
     farmer_id = Column(String, ForeignKey("farmers.id", ondelete="CASCADE"), nullable=False, index=True)
     farm_name = Column(String, nullable=False)
     crop_type = Column(String, nullable=False)
-    boundary_geojson = Column(Text, nullable=False)
+    boundary_geojson = Column(Text, nullable=True)
     boundary_version = Column(Integer, default=1, nullable=False)
     crs = Column(String, default="EPSG:4326", nullable=False)
     area_sq_meters = Column(Float, default=0.0, nullable=False)

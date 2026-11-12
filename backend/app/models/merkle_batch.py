@@ -13,4 +13,5 @@ class MerkleBatch(Base):
     status = Column(String, nullable=False, default="COMMITTED_TO_LEDGER")
     checkpoint_id = Column(String, nullable=True)
     checkpoint_signature = Column(Text, nullable=True)
+    epoch_id = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
