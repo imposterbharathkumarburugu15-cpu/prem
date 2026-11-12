@@ -19,23 +19,36 @@ async def lifespan(app: FastAPI):
         from backend.app.models.user_org import Organization
         from backend.app.services.synthetic_seeder import seed_synthetic_development_data
 
-        with SessionLocal() as db:
+        needs_seed = False
+        db = SessionLocal()
+        try:
             org_count = db.query(Organization).count()
             if org_count == 0:
-                print("[STARTUP] Fresh database detected. Auto-seeding initial development supply chain data...")
-                seed_synthetic_development_data()
-                print("[STARTUP] Auto-seeding completed.")
+                needs_seed = True
+        finally:
+            db.close()
+
+        if needs_seed:
+            print("[STARTUP] Fresh database detected. Auto-seeding initial development supply chain data...")
+            seed_synthetic_development_data()
+            print("[STARTUP] Auto-seeding completed.")
     except Exception as e:
         print(f"Database init during lifespan startup: {e}")
 
     # 2. Start asynchronous AI task dispatcher background worker
-    ai_dispatcher.start()
+    try:
+        ai_dispatcher.start()
+    except Exception as e:
+        print(f"AI dispatcher startup warning: {e}")
 
     yield
 
     # SHUTDOWN:
     # Gracefully stop the AI task dispatcher
-    await ai_dispatcher.stop(timeout_seconds=2.0)
+    try:
+        await ai_dispatcher.stop(timeout_seconds=2.0)
+    except Exception:
+        pass
 
 
 app = FastAPI(
