@@ -11,7 +11,7 @@ import { AdminWorkspace } from './pages/AdminWorkspace';
 import { FarmerInfoPage } from './pages/FarmerInfoPage';
 import { ArchitectureExplorer } from './pages/ArchitectureExplorer';
 import { PublicVerifyPage } from './pages/PublicVerifyPage';
-import { CyberTrapDashboard } from './pages/CyberTrapDashboard';
+import { CyberTrapWorkspace } from './pages/CyberTrapWorkspace';
 import { LiveDemoModal } from './pages/LiveDemoModal';
 
 export const App: React.FC = () => {
@@ -85,7 +85,7 @@ export const App: React.FC = () => {
             path="/cybertrap"
             element={
               <AppShell onOpenLiveDemo={() => setDemoOpen(true)}>
-                <CyberTrapDashboard />
+                <CyberTrapWorkspace />
               </AppShell>
             }
           />

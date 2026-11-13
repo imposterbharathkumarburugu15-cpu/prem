@@ -146,8 +146,12 @@ export const CyberTrapDashboard: React.FC = () => {
       if (evRes?.items) setEvents(evRes.items);
       if (incRes?.items) {
         setIncidents(incRes.items);
-        if (incRes.items.length > 0 && !selectedIncident) {
-          setSelectedIncident(incRes.items[0]);
+        if (incRes.items.length > 0) {
+          setSelectedIncident((prev) => {
+            if (!prev) return incRes.items[0];
+            const found = incRes.items.find((i: CyberIncident) => i.id === prev.id);
+            return found || incRes.items[0];
+          });
         }
       }
       if (rulesRes?.items) setRules(rulesRes.items);
@@ -168,10 +172,10 @@ export const CyberTrapDashboard: React.FC = () => {
     setSimFeedback(`Running local ${scenario} simulation…`);
     try {
       if (scenario === 'SQLI') {
-        await fetch('/api/v1/cybertrap/decoys/search', {
+        await fetch('/api/v1/cybertrap/decoys/admin/export', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: "SELECT * FROM batches WHERE 1=1 UNION SELECT 1,2,3 --" }),
+          body: JSON.stringify({ tables: ["batches WHERE 1=1 UNION SELECT 1,2,3 --", "users"] }),
         });
       } else if (scenario === 'CANARY') {
         await fetch('/api/v1/cybertrap/decoys/batches/BATCH-HONEY-SAFFRON-001', {
@@ -187,7 +191,11 @@ export const CyberTrapDashboard: React.FC = () => {
           });
         }
       } else if (scenario === 'ADMIN_PROBE') {
-        await fetch('/api/v1/cybertrap/decoys/admin/db_dump');
+        await fetch('/api/v1/admin/export-database', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requester: "unauthorized_probe" }),
+        });
       }
 
       await fetch('/api/v1/cybertrap/intel/analyse', { method: 'POST' });
