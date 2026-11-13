@@ -67,6 +67,26 @@ def register_device(
         existing = query.first()
 
     if existing:
+        # If device was auto-provisioned (no real key yet), upgrade it with the real key/farmer
+        if existing.public_key_pem == "AUTO_PROVISIONED":
+            existing.public_key_pem = key_pem
+            existing.farmer_id = payload.farmer_id
+            existing.status = "ACTIVE"
+            db.commit()
+            db.refresh(existing)
+            response.status_code = status.HTTP_200_OK
+            return DeviceResponse(
+                id=existing.id,
+                device_id=existing.id,
+                farmer_id=existing.farmer_id,
+                public_key_pem=existing.public_key_pem,
+                status=existing.status,
+                last_sequence_number=existing.last_sequence_number,
+                created_at=existing.created_at,
+                registered_at=existing.created_at,
+                message="Auto-provisioned device upgraded with real key (OK)",
+            )
+
         if (
             existing.public_key_pem.strip() == key_pem
             and str(existing.farmer_id) == str(payload.farmer_id)
