@@ -126,11 +126,13 @@ def get_spa_html(extra_meta: str = "") -> HTMLResponse:
 
 
 @app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "healthy", "service": "praman-unified-backend", "version": settings.VERSION}
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/")
 def root_web():
     return get_spa_html()
 
