@@ -181,7 +181,7 @@ async def ingest_evidence(
             farmer_id=farmer_obj.id,
             public_key_pem="AUTO_PROVISIONED",
             status="ACTIVE",
-            last_sequence_number=0,
+            last_sequence_number=max(0, seq_num - 1),
         )
         db.add(device)
         db.flush()
@@ -212,6 +212,21 @@ async def ingest_evidence(
         canonical_envelope_hash = hashlib.sha256(canonicalize(envelope_dict)).hexdigest()
     except Exception:
         canonical_envelope_hash = None
+
+    # Resynchronize sequence baseline for mobile app after backend cold boot/redeploy
+    # if this device has 0 evidence records in the current database instance
+    user_agent = request.headers.get("user-agent", "")
+    is_mobile_app = (
+        "PRAMAN-Farmer-Android" in user_agent
+        or "Android" in user_agent
+        or "Dalvik" in user_agent
+        or device.public_key_pem == "AUTO_PROVISIONED"
+    )
+    if is_mobile_app and device.last_sequence_number == 0 and seq_num > 1:
+        ev_count = db.query(Evidence).filter(Evidence.device_id == device.id).count()
+        if ev_count == 0:
+            device.last_sequence_number = seq_num - 1
+            db.flush()
 
     is_seq_ok, seq_status_code, seq_msg, existing_ev = SequenceService.evaluate_sequence(
         db=db,
