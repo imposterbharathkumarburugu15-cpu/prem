@@ -11,36 +11,41 @@ from backend.app.services.ai_dispatcher import ai_dispatcher
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import threading
+
     # STARTUP:
-    # 1. Initialize tables if not already created
+    # 1. Initialize tables synchronously (fast — just DDL, no data)
     try:
         Base.metadata.create_all(bind=engine)
-        # If database is fresh/empty (e.g. Render fresh deployment), auto-seed initial supply chain data
-        from backend.app.core.database import SessionLocal
-        from backend.app.models.user_org import Organization
-        from backend.app.services.synthetic_seeder import seed_synthetic_development_data
-
-        needs_seed = False
-        db = SessionLocal()
-        try:
-            org_count = db.query(Organization).count()
-            if org_count == 0:
-                needs_seed = True
-        finally:
-            db.close()
-
-        if needs_seed:
-            print("[STARTUP] Fresh database detected. Auto-seeding initial development supply chain data...")
-            seed_synthetic_development_data()
-            print("[STARTUP] Auto-seeding completed.")
     except Exception as e:
-        print(f"Database init during lifespan startup: {e}")
+        print(f"Database DDL error during startup: {e}")
 
     # 2. Start asynchronous AI task dispatcher background worker
     try:
         ai_dispatcher.start()
     except Exception as e:
         print(f"AI dispatcher startup warning: {e}")
+
+    # 3. Seed data in background thread so health check passes immediately
+    def _background_seed():
+        try:
+            from backend.app.core.database import SessionLocal
+            from backend.app.models.user_org import Organization
+            from backend.app.services.synthetic_seeder import seed_synthetic_development_data
+            db = SessionLocal()
+            try:
+                org_count = db.query(Organization).count()
+                needs_seed = org_count == 0
+            finally:
+                db.close()
+            if needs_seed:
+                print("[STARTUP] Fresh database detected. Auto-seeding supply chain data...")
+                seed_synthetic_development_data()
+                print("[STARTUP] Auto-seeding completed.")
+        except Exception as e:
+            print(f"Background seed warning: {e}")
+
+    threading.Thread(target=_background_seed, daemon=True).start()
 
     yield
 
