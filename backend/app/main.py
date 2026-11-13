@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
 from backend.app.api.v1 import api_router
 from backend.app.core.database import engine, Base
+import backend.app.models  # noqa: F401 — registers all ORM models with Base before create_all
 from backend.app.services.ai_dispatcher import ai_dispatcher
 
 
